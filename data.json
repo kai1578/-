@@ -216,6 +216,13 @@
       "emoji": "✍️",
       "emojiBg": "#F0FDF4",
       "emojiColor": "#6965DB"
+    },
+    {
+      "name": "淘宝网",
+      "url": "https://www.taobao.com",
+      "desc": "",
+      "category": "购物网站",
+      "favicon": "https://www.google.com/s2/favicons?domain=www.taobao.com&sz=64"
     }
   ]
 }

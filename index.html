@@ -319,41 +319,6 @@ body.edit-mode .nav-group-title .cat-actions {
   border-color: var(--danger);
 }
 
-.nav-group[draggable="true"] {
-  cursor: grab;
-}
-
-.nav-group[draggable="true"]:active {
-  cursor: grabbing;
-}
-
-.nav-group.dragging {
-  opacity: 0.4;
-}
-
-.nav-group.drag-over-top {
-  border-top: 3px solid var(--accent);
-  padding-top: 0;
-}
-
-.nav-group.drag-over-bottom {
-  border-bottom: 3px solid var(--accent);
-  padding-bottom: 0;
-}
-
-.nav-group .drag-hint {
-  display: none;
-  font-size: 11px;
-  color: var(--accent);
-  margin-left: 8px;
-  font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-body.edit-mode .nav-group .drag-hint {
-  display: inline;
-}
 
 .add-category-btn {
   display: none;
@@ -708,6 +673,7 @@ footer {
 <body>
 
 <button class="settings-btn" id="settingsBtn" title="设置">⚙️</button>
+<button class="settings-btn" id="adminBtn" title="管理员配置" style="right:76px;font-size:16px;display:none;">🔑</button>
 
 <div class="container">
   <header>
@@ -841,6 +807,11 @@ footer {
   <div class="modal" style="max-width:460px;">
     <h2>🔑 管理员配置</h2>
     <div class="form-group">
+      <label>管理员密码</label>
+      <input type="password" id="adminPwdInput" placeholder="设置管理员密码">
+      <div style="font-size:12px;color:var(--muted-fg);margin-top:6px;">进入编辑模式需要此密码</div>
+    </div>
+    <div class="form-group">
       <label>GitHub Token</label>
       <input type="password" id="adminTokenInput" placeholder="ghp_xxxxxxxxxxxx">
       <div style="font-size:12px;color:var(--muted-fg);margin-top:6px;line-height:1.5;">
@@ -864,7 +835,7 @@ var isEditMode = false;
 var currentLogoUrl = '';
 var urlDebounce = null;
 var editingSiteIdx = -1;
-var dragSrcEl = null;
+
 var adminToken = localStorage.getItem('kai_admin_token') || '';
 var repoInfo = localStorage.getItem('kai_repo_info') || '';
 var dataSha = '';
@@ -934,6 +905,20 @@ function renderNav() {
     var catActions = document.createElement('div');
     catActions.className = 'cat-actions';
 
+    var catUpBtn = document.createElement('button');
+    catUpBtn.className = 'cat-edit-btn';
+    catUpBtn.textContent = '↑';
+    catUpBtn.title = '上移分类';
+    catUpBtn.onclick = function(e) { e.stopPropagation(); moveCategory(cat, -1); };
+    catActions.appendChild(catUpBtn);
+
+    var catDownBtn = document.createElement('button');
+    catDownBtn.className = 'cat-edit-btn';
+    catDownBtn.textContent = '↓';
+    catDownBtn.title = '下移分类';
+    catDownBtn.onclick = function(e) { e.stopPropagation(); moveCategory(cat, 1); };
+    catActions.appendChild(catDownBtn);
+
     var catEditBtn = document.createElement('button');
     catEditBtn.className = 'cat-edit-btn';
     catEditBtn.textContent = '✎';
@@ -949,11 +934,6 @@ function renderNav() {
     catActions.appendChild(catDelBtn);
 
     title.appendChild(catActions);
-
-    var dragHint = document.createElement('span');
-    dragHint.className = 'drag-hint';
-    dragHint.textContent = '⇅ 拖拽排序';
-    title.appendChild(dragHint);
     group.appendChild(title);
 
     var grid = document.createElement('div');
@@ -965,6 +945,7 @@ function renderNav() {
       card.className = 'nav-card';
       card.href = site.url;
       card.target = '_blank';
+      card.draggable = false;
       card.onclick = function(e) { if (isEditMode) { e.preventDefault(); openEditModal(idx); } };
 
       var iconDiv = document.createElement('div');
@@ -1046,54 +1027,29 @@ function renderNav() {
     container.appendChild(tokenBtn);
   }
 
-  if (isEditMode) {
-    var groups = container.querySelectorAll('.nav-group');
-    groups.forEach(function(g) {
-      g.setAttribute('draggable', 'true');
-      g.addEventListener('dragstart', function(e) {
-        dragSrcEl = this;
-        this.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', '');
-      });
-      g.addEventListener('dragend', function() {
-        this.classList.remove('dragging');
-        container.querySelectorAll('.nav-group').forEach(function(el) { el.classList.remove('drag-over-top', 'drag-over-bottom'); });
-      });
-      g.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        if (dragSrcEl === this) return;
-        var rect = this.getBoundingClientRect();
-        this.classList.remove('drag-over-top', 'drag-over-bottom');
-        this.classList.add(e.clientY < rect.top + rect.height / 2 ? 'drag-over-top' : 'drag-over-bottom');
-      });
-      g.addEventListener('dragleave', function() { this.classList.remove('drag-over-top', 'drag-over-bottom'); });
-      g.addEventListener('drop', function(e) {
-        e.preventDefault();
-        if (dragSrcEl === this) return;
-        var rect = this.getBoundingClientRect();
-        var midY = rect.top + rect.height / 2;
-        var srcCat = dragSrcEl.querySelector('.nav-group-title').childNodes[0].textContent;
-        var targetCat = this.querySelector('.nav-group-title').childNodes[0].textContent;
-        var co = siteData.categoryOrder || [];
-        var si = co.indexOf(srcCat), ti = co.indexOf(targetCat);
-        if (si === -1) { co.push(srcCat); si = co.length - 1; }
-        if (ti === -1) { co.push(targetCat); ti = co.length - 1; }
-        co.splice(si, 1);
-        ti = co.indexOf(targetCat);
-        co.splice(e.clientY < midY ? ti : ti + 1, 0, srcCat);
-        siteData.categoryOrder = co;
-        pushData();
-        renderNav();
-      });
-    });
-  }
 }
 
 var catModalCallback = null;
 var confirmCallback = null;
 var pwdCallback = null;
+
+function moveCategory(catName, direction) {
+  var co = siteData.categoryOrder || [];
+  if (co.length === 0) {
+    var allCats = getAllCategories();
+    allCats.forEach(function(c) { if (co.indexOf(c) === -1) co.push(c); });
+    siteData.categoryOrder = co;
+  }
+  var idx = co.indexOf(catName);
+  if (idx === -1) return;
+  var newIdx = idx + direction;
+  if (newIdx < 0 || newIdx >= co.length) return;
+  co.splice(idx, 1);
+  co.splice(newIdx, 0, catName);
+  siteData.categoryOrder = co;
+  pushData();
+  renderNav();
+}
 
 function addCategory() {
   document.getElementById('catModalTitle').textContent = '新建分类';
@@ -1363,12 +1319,19 @@ function closeTokenModal() {
 }
 
 function openTokenModal() {
+  document.getElementById('adminPwdInput').value = '';
+  document.getElementById('adminPwdInput').placeholder = editPasswordHash ? '修改管理员密码（留空不修改）' : '设置管理员密码';
   document.getElementById('adminTokenInput').value = adminToken;
   document.getElementById('repoInfoInput').value = repoInfo;
   document.getElementById('tokenOverlay').classList.add('active');
 }
 
 function saveTokenSettings() {
+  var newPwd = document.getElementById('adminPwdInput').value;
+  if (newPwd) {
+    editPasswordHash = simpleHash(newPwd);
+    localStorage.setItem('kai_edit_pwd', editPasswordHash);
+  }
   adminToken = document.getElementById('adminTokenInput').value.trim();
   repoInfo = document.getElementById('repoInfoInput').value.trim();
   localStorage.setItem('kai_admin_token', adminToken);
@@ -1383,6 +1346,7 @@ document.getElementById('settingsBtn').addEventListener('click', function() {
     document.body.classList.remove('edit-mode');
     this.textContent = '⚙️';
     this.title = '设置';
+    document.getElementById('adminBtn').style.display = 'none';
     return;
   }
   if (editPasswordHash) {
@@ -1392,6 +1356,7 @@ document.getElementById('settingsBtn').addEventListener('click', function() {
         document.body.classList.add('edit-mode');
         document.getElementById('settingsBtn').textContent = '✓';
         document.getElementById('settingsBtn').title = '完成编辑';
+        document.getElementById('adminBtn').style.display = 'flex';
         renderNav();
       } else showToast('密码错误');
     });
@@ -1400,8 +1365,11 @@ document.getElementById('settingsBtn').addEventListener('click', function() {
     document.body.classList.add('edit-mode');
     this.textContent = '✓';
     this.title = '完成编辑';
+    document.getElementById('adminBtn').style.display = 'flex';
   }
 });
+
+document.getElementById('adminBtn').addEventListener('click', function() { openTokenModal(); });
 
 document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
 document.getElementById('catModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeCatModal(); });
@@ -1444,24 +1412,61 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-fetch('data.json')
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    siteData = data;
-    if (adminToken && repoInfo) {
-      fetch('https://api.github.com/repos/' + repoInfo + '/contents/data.json', {
-        headers: { 'Authorization': 'token ' + adminToken, 'Accept': 'application/vnd.github.v3+json' }
-      }).then(function(r) { return r.json(); }).then(function(res) {
-        if (res.sha) dataSha = res.sha;
-        renderNav();
-        document.getElementById('searchInput').focus();
-      }).catch(function() { renderNav(); document.getElementById('searchInput').focus(); });
-    } else {
+var fallbackData = {
+  "categories": ["常用工具", "开发资源", "社交媒体", "学习教育", "效率工具", "自定义"],
+  "categoryOrder": [],
+  "sites": [
+    { "name": "百度", "url": "https://www.baidu.com", "desc": "搜索引擎", "category": "常用工具", "emoji": "🔍", "emojiBg": "#F1F5F9", "emojiColor": "#0052FF" },
+    { "name": "Google 翻译", "url": "https://translate.google.com", "desc": "多语言翻译", "category": "常用工具", "emoji": "🌐", "emojiBg": "#EEF2FF", "emojiColor": "#4F46E5" },
+    { "name": "Notion", "url": "https://www.notion.so", "desc": "笔记与协作", "category": "常用工具", "emoji": "📝", "emojiBg": "#F0FDF4", "emojiColor": "#16A34A" },
+    { "name": "ChatGPT", "url": "https://chat.openai.com", "desc": "AI 对话助手", "category": "常用工具", "emoji": "🤖", "emojiBg": "#F0F9FF", "emojiColor": "#0284C7" },
+    { "name": "Canva", "url": "https://www.canva.cn", "desc": "在线设计", "category": "常用工具", "emoji": "🎨", "emojiBg": "#FFF7ED", "emojiColor": "#EA580C" },
+    { "name": "GitHub", "url": "https://github.com", "desc": "代码托管", "category": "开发资源", "emoji": "🐙", "emojiBg": "#F1F5F9", "emojiColor": "#0F172A" },
+    { "name": "StackOverflow", "url": "https://stackoverflow.com", "desc": "技术问答", "category": "开发资源", "emoji": "📚", "emojiBg": "#FFF7ED", "emojiColor": "#F59E0B" },
+    { "name": "MDN", "url": "https://developer.mozilla.org", "desc": "Web 开发文档", "category": "开发资源", "emoji": "📖", "emojiBg": "#EEF2FF", "emojiColor": "#4F46E5" },
+    { "name": "CodePen", "url": "https://codepen.io", "desc": "在线代码编辑", "category": "开发资源", "emoji": "✏️", "emojiBg": "#F0FDF4", "emojiColor": "#16A34A" },
+    { "name": "npm", "url": "https://www.npmjs.com", "desc": "包管理器", "category": "开发资源", "emoji": "📦", "emojiBg": "#F1F5F9", "emojiColor": "#CB3837" },
+    { "name": "微博", "url": "https://weibo.com", "desc": "社交平台", "category": "社交媒体", "emoji": "📢", "emojiBg": "#FFF1F2", "emojiColor": "#E11D48" },
+    { "name": "知乎", "url": "https://www.zhihu.com", "desc": "知识社区", "category": "社交媒体", "emoji": "💡", "emojiBg": "#EEF2FF", "emojiColor": "#0066FF" },
+    { "name": "哔哩哔哩", "url": "https://www.bilibili.com", "desc": "视频社区", "category": "社交媒体", "emoji": "🎬", "emojiBg": "#F0F9FF", "emojiColor": "#00A1D6" },
+    { "name": "Twitter", "url": "https://twitter.com", "desc": "全球社交", "category": "社交媒体", "emoji": "🐦", "emojiBg": "#F0F9FF", "emojiColor": "#1D9BF0" },
+    { "name": "YouTube", "url": "https://www.youtube.com", "desc": "全球视频", "category": "社交媒体", "emoji": "▶️", "emojiBg": "#FFF7ED", "emojiColor": "#FF0000" },
+    { "name": "Coursera", "url": "https://www.coursera.org", "desc": "在线课程", "category": "学习教育", "emoji": "🎓", "emojiBg": "#EEF2FF", "emojiColor": "#0056D2" },
+    { "name": "中国大学MOOC", "url": "https://www.icourse163.org", "desc": "国内课程", "category": "学习教育", "emoji": "🏫", "emojiBg": "#F0FDF4", "emojiColor": "#C41230" },
+    { "name": "力扣", "url": "https://leetcode.cn", "desc": "算法练习", "category": "学习教育", "emoji": "🧩", "emojiBg": "#FFF7ED", "emojiColor": "#FFA116" },
+    { "name": "W3Schools", "url": "https://www.w3schools.com", "desc": "Web 教程", "category": "学习教育", "emoji": "💻", "emojiBg": "#F0FDF4", "emojiColor": "#04AA6D" },
+    { "name": "Gmail", "url": "https://mail.google.com", "desc": "邮件服务", "category": "效率工具", "emoji": "✉️", "emojiBg": "#FFF7ED", "emojiColor": "#EA4335" },
+    { "name": "Google Drive", "url": "https://drive.google.com", "desc": "云存储", "category": "效率工具", "emoji": "📁", "emojiBg": "#EEF2FF", "emojiColor": "#4285F4" },
+    { "name": "Figma", "url": "https://www.figma.com", "desc": "设计协作", "category": "效率工具", "emoji": "🎯", "emojiBg": "#FFF1F2", "emojiColor": "#A259FF" },
+    { "name": "Excalidraw", "url": "https://excalidraw.com", "desc": "手绘白板", "category": "效率工具", "emoji": "✍️", "emojiBg": "#F0FDF4", "emojiColor": "#6965DB" }
+  ]
+};
+
+function initData() {
+  if (adminToken && repoInfo) {
+    fetch('https://api.github.com/repos/' + repoInfo + '/contents/data.json', {
+      headers: { 'Authorization': 'token ' + adminToken, 'Accept': 'application/vnd.github.v3+json' }
+    }).then(function(r) { return r.json(); }).then(function(res) {
+      if (res.sha) dataSha = res.sha;
+      if (res.content) {
+        try { siteData = JSON.parse(decodeURIComponent(escape(atob(res.content.replace(/\n/g, ''))))); } catch(e) {}
+      }
       renderNav();
       document.getElementById('searchInput').focus();
-    }
-  })
-  .catch(function() { renderNav(); document.getElementById('searchInput').focus(); });
+    }).catch(function() {
+      siteData = fallbackData;
+      renderNav();
+      document.getElementById('searchInput').focus();
+    });
+  } else {
+    fetch('data.json')
+      .then(function(r) { return r.json(); })
+      .then(function(data) { siteData = data; renderNav(); document.getElementById('searchInput').focus(); })
+      .catch(function() { siteData = fallbackData; renderNav(); document.getElementById('searchInput').focus(); });
+  }
+}
+
+initData();
 </script>
 
 </body>

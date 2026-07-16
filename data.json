@@ -1,29 +1,221 @@
 {
-  "categories": ["常用工具", "开发资源", "社交媒体", "学习教育", "效率工具", "自定义"],
+  "categories": [
+    "常用工具",
+    "开发资源",
+    "社交媒体",
+    "学习教育",
+    "效率工具",
+    "自定义",
+    "购物网站"
+  ],
   "categoryOrder": [],
   "sites": [
-    { "name": "百度", "url": "https://www.baidu.com", "desc": "搜索引擎", "category": "常用工具", "emoji": "🔍", "emojiBg": "#F1F5F9", "emojiColor": "#0052FF" },
-    { "name": "Google 翻译", "url": "https://translate.google.com", "desc": "多语言翻译", "category": "常用工具", "emoji": "🌐", "emojiBg": "#EEF2FF", "emojiColor": "#4F46E5" },
-    { "name": "Notion", "url": "https://www.notion.so", "desc": "笔记与协作", "category": "常用工具", "emoji": "📝", "emojiBg": "#F0FDF4", "emojiColor": "#16A34A" },
-    { "name": "ChatGPT", "url": "https://chat.openai.com", "desc": "AI 对话助手", "category": "常用工具", "emoji": "🤖", "emojiBg": "#F0F9FF", "emojiColor": "#0284C7" },
-    { "name": "Canva", "url": "https://www.canva.cn", "desc": "在线设计", "category": "常用工具", "emoji": "🎨", "emojiBg": "#FFF7ED", "emojiColor": "#EA580C" },
-    { "name": "GitHub", "url": "https://github.com", "desc": "代码托管", "category": "开发资源", "emoji": "🐙", "emojiBg": "#F1F5F9", "emojiColor": "#0F172A" },
-    { "name": "StackOverflow", "url": "https://stackoverflow.com", "desc": "技术问答", "category": "开发资源", "emoji": "📚", "emojiBg": "#FFF7ED", "emojiColor": "#F59E0B" },
-    { "name": "MDN", "url": "https://developer.mozilla.org", "desc": "Web 开发文档", "category": "开发资源", "emoji": "📖", "emojiBg": "#EEF2FF", "emojiColor": "#4F46E5" },
-    { "name": "CodePen", "url": "https://codepen.io", "desc": "在线代码编辑", "category": "开发资源", "emoji": "✏️", "emojiBg": "#F0FDF4", "emojiColor": "#16A34A" },
-    { "name": "npm", "url": "https://www.npmjs.com", "desc": "包管理器", "category": "开发资源", "emoji": "📦", "emojiBg": "#F1F5F9", "emojiColor": "#CB3837" },
-    { "name": "微博", "url": "https://weibo.com", "desc": "社交平台", "category": "社交媒体", "emoji": "📢", "emojiBg": "#FFF1F2", "emojiColor": "#E11D48" },
-    { "name": "知乎", "url": "https://www.zhihu.com", "desc": "知识社区", "category": "社交媒体", "emoji": "💡", "emojiBg": "#EEF2FF", "emojiColor": "#0066FF" },
-    { "name": "哔哩哔哩", "url": "https://www.bilibili.com", "desc": "视频社区", "category": "社交媒体", "emoji": "🎬", "emojiBg": "#F0F9FF", "emojiColor": "#00A1D6" },
-    { "name": "Twitter", "url": "https://twitter.com", "desc": "全球社交", "category": "社交媒体", "emoji": "🐦", "emojiBg": "#F0F9FF", "emojiColor": "#1D9BF0" },
-    { "name": "YouTube", "url": "https://www.youtube.com", "desc": "全球视频", "category": "社交媒体", "emoji": "▶️", "emojiBg": "#FFF7ED", "emojiColor": "#FF0000" },
-    { "name": "Coursera", "url": "https://www.coursera.org", "desc": "在线课程", "category": "学习教育", "emoji": "🎓", "emojiBg": "#EEF2FF", "emojiColor": "#0056D2" },
-    { "name": "中国大学MOOC", "url": "https://www.icourse163.org", "desc": "国内课程", "category": "学习教育", "emoji": "🏫", "emojiBg": "#F0FDF4", "emojiColor": "#C41230" },
-    { "name": "力扣", "url": "https://leetcode.cn", "desc": "算法练习", "category": "学习教育", "emoji": "🧩", "emojiBg": "#FFF7ED", "emojiColor": "#FFA116" },
-    { "name": "W3Schools", "url": "https://www.w3schools.com", "desc": "Web 教程", "category": "学习教育", "emoji": "💻", "emojiBg": "#F0FDF4", "emojiColor": "#04AA6D" },
-    { "name": "Gmail", "url": "https://mail.google.com", "desc": "邮件服务", "category": "效率工具", "emoji": "✉️", "emojiBg": "#FFF7ED", "emojiColor": "#EA4335" },
-    { "name": "Google Drive", "url": "https://drive.google.com", "desc": "云存储", "category": "效率工具", "emoji": "📁", "emojiBg": "#EEF2FF", "emojiColor": "#4285F4" },
-    { "name": "Figma", "url": "https://www.figma.com", "desc": "设计协作", "category": "效率工具", "emoji": "🎯", "emojiBg": "#FFF1F2", "emojiColor": "#A259FF" },
-    { "name": "Excalidraw", "url": "https://excalidraw.com", "desc": "手绘白板", "category": "效率工具", "emoji": "✍️", "emojiBg": "#F0FDF4", "emojiColor": "#6965DB" }
+    {
+      "name": "百度",
+      "url": "https://www.baidu.com",
+      "desc": "搜索引擎",
+      "category": "常用工具",
+      "emoji": "🔍",
+      "emojiBg": "#F1F5F9",
+      "emojiColor": "#0052FF"
+    },
+    {
+      "name": "Google 翻译",
+      "url": "https://translate.google.com",
+      "desc": "多语言翻译",
+      "category": "常用工具",
+      "emoji": "🌐",
+      "emojiBg": "#EEF2FF",
+      "emojiColor": "#4F46E5"
+    },
+    {
+      "name": "Notion",
+      "url": "https://www.notion.so",
+      "desc": "笔记与协作",
+      "category": "常用工具",
+      "emoji": "📝",
+      "emojiBg": "#F0FDF4",
+      "emojiColor": "#16A34A"
+    },
+    {
+      "name": "ChatGPT",
+      "url": "https://chat.openai.com",
+      "desc": "AI 对话助手",
+      "category": "常用工具",
+      "emoji": "🤖",
+      "emojiBg": "#F0F9FF",
+      "emojiColor": "#0284C7"
+    },
+    {
+      "name": "Canva",
+      "url": "https://www.canva.cn",
+      "desc": "在线设计",
+      "category": "常用工具",
+      "emoji": "🎨",
+      "emojiBg": "#FFF7ED",
+      "emojiColor": "#EA580C"
+    },
+    {
+      "name": "GitHub",
+      "url": "https://github.com",
+      "desc": "代码托管",
+      "category": "开发资源",
+      "emoji": "🐙",
+      "emojiBg": "#F1F5F9",
+      "emojiColor": "#0F172A"
+    },
+    {
+      "name": "StackOverflow",
+      "url": "https://stackoverflow.com",
+      "desc": "技术问答",
+      "category": "开发资源",
+      "emoji": "📚",
+      "emojiBg": "#FFF7ED",
+      "emojiColor": "#F59E0B"
+    },
+    {
+      "name": "MDN",
+      "url": "https://developer.mozilla.org",
+      "desc": "Web 开发文档",
+      "category": "开发资源",
+      "emoji": "📖",
+      "emojiBg": "#EEF2FF",
+      "emojiColor": "#4F46E5"
+    },
+    {
+      "name": "CodePen",
+      "url": "https://codepen.io",
+      "desc": "在线代码编辑",
+      "category": "开发资源",
+      "emoji": "✏️",
+      "emojiBg": "#F0FDF4",
+      "emojiColor": "#16A34A"
+    },
+    {
+      "name": "npm",
+      "url": "https://www.npmjs.com",
+      "desc": "包管理器",
+      "category": "开发资源",
+      "emoji": "📦",
+      "emojiBg": "#F1F5F9",
+      "emojiColor": "#CB3837"
+    },
+    {
+      "name": "微博",
+      "url": "https://weibo.com",
+      "desc": "社交平台",
+      "category": "社交媒体",
+      "emoji": "📢",
+      "emojiBg": "#FFF1F2",
+      "emojiColor": "#E11D48"
+    },
+    {
+      "name": "知乎",
+      "url": "https://www.zhihu.com",
+      "desc": "知识社区",
+      "category": "社交媒体",
+      "emoji": "💡",
+      "emojiBg": "#EEF2FF",
+      "emojiColor": "#0066FF"
+    },
+    {
+      "name": "哔哩哔哩",
+      "url": "https://www.bilibili.com",
+      "desc": "视频社区",
+      "category": "社交媒体",
+      "emoji": "🎬",
+      "emojiBg": "#F0F9FF",
+      "emojiColor": "#00A1D6"
+    },
+    {
+      "name": "Twitter",
+      "url": "https://twitter.com",
+      "desc": "全球社交",
+      "category": "社交媒体",
+      "emoji": "🐦",
+      "emojiBg": "#F0F9FF",
+      "emojiColor": "#1D9BF0"
+    },
+    {
+      "name": "YouTube",
+      "url": "https://www.youtube.com",
+      "desc": "全球视频",
+      "category": "社交媒体",
+      "emoji": "▶️",
+      "emojiBg": "#FFF7ED",
+      "emojiColor": "#FF0000"
+    },
+    {
+      "name": "Coursera",
+      "url": "https://www.coursera.org",
+      "desc": "在线课程",
+      "category": "学习教育",
+      "emoji": "🎓",
+      "emojiBg": "#EEF2FF",
+      "emojiColor": "#0056D2"
+    },
+    {
+      "name": "中国大学MOOC",
+      "url": "https://www.icourse163.org",
+      "desc": "国内课程",
+      "category": "学习教育",
+      "emoji": "🏫",
+      "emojiBg": "#F0FDF4",
+      "emojiColor": "#C41230"
+    },
+    {
+      "name": "力扣",
+      "url": "https://leetcode.cn",
+      "desc": "算法练习",
+      "category": "学习教育",
+      "emoji": "🧩",
+      "emojiBg": "#FFF7ED",
+      "emojiColor": "#FFA116"
+    },
+    {
+      "name": "W3Schools",
+      "url": "https://www.w3schools.com",
+      "desc": "Web 教程",
+      "category": "学习教育",
+      "emoji": "💻",
+      "emojiBg": "#F0FDF4",
+      "emojiColor": "#04AA6D"
+    },
+    {
+      "name": "Gmail",
+      "url": "https://mail.google.com",
+      "desc": "邮件服务",
+      "category": "效率工具",
+      "emoji": "✉️",
+      "emojiBg": "#FFF7ED",
+      "emojiColor": "#EA4335"
+    },
+    {
+      "name": "Google Drive",
+      "url": "https://drive.google.com",
+      "desc": "云存储",
+      "category": "效率工具",
+      "emoji": "📁",
+      "emojiBg": "#EEF2FF",
+      "emojiColor": "#4285F4"
+    },
+    {
+      "name": "Figma",
+      "url": "https://www.figma.com",
+      "desc": "设计协作",
+      "category": "效率工具",
+      "emoji": "🎯",
+      "emojiBg": "#FFF1F2",
+      "emojiColor": "#A259FF"
+    },
+    {
+      "name": "Excalidraw",
+      "url": "https://excalidraw.com",
+      "desc": "手绘白板",
+      "category": "效率工具",
+      "emoji": "✍️",
+      "emojiBg": "#F0FDF4",
+      "emojiColor": "#6965DB"
+    }
   ]
 }

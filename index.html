@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>凯 - 个人导航</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #FAFAFA;
+  --fg: #0F172A;
+  --muted: #F1F5F9;
+  --muted-fg: #64748B;
+  --accent: #0052FF;
+  --accent-2: #4D7CFF;
+  --accent-fg: #FFFFFF;
+  --border: #E2E8F0;
+  --card: #FFFFFF;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.08);
+  --shadow-accent: 0 4px 14px rgba(0,82,255,0.25);
+  --danger: #EF4444;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -200px;
+  right: -200px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(0,82,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -200px;
+  left: -200px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(77,124,255,0.05) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Header ===== */
+header {
+  padding: 48px 0 0;
+  text-align: center;
+  animation: fadeInDown 0.7s ease-out;
+  position: relative;
+}
+
+header .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+header .logo-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 20px;
+  box-shadow: var(--shadow-accent);
+}
+
+header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--fg);
+}
+
+header .subtitle {
+  color: var(--muted-fg);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* ===== Settings Button ===== */
+.settings-btn {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-fg);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease-out;
+  z-index: 100;
+}
+
+.settings-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+  transform: rotate(30deg);
+}
+
+/* ===== Search ===== */
+.search-section {
+  margin: 36px auto 0;
+  max-width: 620px;
+  animation: fadeInUp 0.7s ease-out 0.1s both;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 6px 6px 6px 20px;
+  box-shadow: var(--shadow-md);
+  transition: all 0.25s ease-out;
+}
+
+.search-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-accent), var(--shadow-md);
+}
+
+.search-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--fg);
+  background: transparent;
+  height: 44px;
+}
+
+.search-box input::placeholder {
+  color: var(--muted-fg);
+}
+
+.search-box button {
+  height: 44px;
+  padding: 0 28px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--accent-fg);
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+  white-space: nowrap;
+}
+
+.search-box button:hover {
+  box-shadow: var(--shadow-accent);
+  transform: translateY(-1px);
+}
+
+.search-box button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.search-engines {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.search-engines label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--muted-fg);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.search-engines label:hover { color: var(--fg); }
+
+.search-engines input[type="radio"] {
+  accent-color: var(--accent);
+}
+
+/* ===== Time & Date ===== */
+.time-bar {
+  text-align: center;
+  margin-top: 32px;
+  animation: fadeInUp 0.7s ease-out 0.15s both;
+}
+
+.time-bar .time {
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -2px;
+  color: var(--fg);
+  line-height: 1;
+}
+
+.time-bar .date {
+  font-size: 14px;
+  color: var(--muted-fg);
+  margin-top: 4px;
+}
+
+/* ===== Nav Sections ===== */
+.nav-sections {
+  margin-top: 40px;
+  padding-bottom: 60px;
+}
+
+.nav-group {
+  margin-bottom: 32px;
+  animation: fadeInUp 0.7s ease-out both;
+}
+
+.nav-group:nth-child(1) { animation-delay: 0.2s; }
+.nav-group:nth-child(2) { animation-delay: 0.3s; }
+.nav-group:nth-child(3) { animation-delay: 0.4s; }
+.nav-group:nth-child(4) { animation-delay: 0.5s; }
+.nav-group:nth-child(5) { animation-delay: 0.6s; }
+.nav-group:nth-child(n+6) { animation-delay: 0.7s; }
+
+.nav-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted-fg);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+  padding-left: 2px;
+}
+
+.nav-group-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.nav-group-title .cat-actions {
+  display: none;
+  gap: 4px;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+body.edit-mode .nav-group-title .cat-actions {
+  display: flex;
+}
+
+.nav-group-title .cat-actions button {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-fg);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s;
+}
+
+.nav-group-title .cat-actions button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.nav-group-title .cat-actions .cat-del-btn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.add-category-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 24px;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted-fg);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease-out;
+  font-family: inherit;
+}
+
+body.edit-mode .add-category-btn {
+  display: flex;
+}
+
+.add-category-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0,82,255,0.03);
+}
+
+.nav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.nav-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--fg);
+  transition: all 0.25s ease-out;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.nav-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.nav-card:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.nav-card .icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.nav-card .icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.nav-card .info {
+  min-width: 0;
+}
+
+.nav-card .info .name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-card .info .desc {
+  font-size: 11px;
+  color: var(--muted-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.nav-card .card-actions {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: none;
+  gap: 4px;
+  z-index: 2;
+}
+
+body.edit-mode .nav-card .card-actions {
+  display: flex;
+}
+
+.nav-card .card-actions button {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: white;
+  border: 2px solid var(--card);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: transform 0.15s;
+  padding: 0;
+}
+
+.nav-card .card-actions button:hover {
+  transform: scale(1.15);
+}
+
+.nav-card .card-actions .edit-btn {
+  background: var(--accent);
+}
+
+.nav-card .card-actions .delete-btn {
+  background: var(--danger);
+}
+
+/* ===== Add Card ===== */
+.add-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  background: transparent;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  color: var(--muted-fg);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease-out;
+  font-family: inherit;
+}
+
+.add-card:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0,82,255,0.03);
+}
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 32px;
+  width: 90%;
+  max-width: 460px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+  animation: modalIn 0.3s ease-out;
+}
+
+.modal h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: var(--fg);
+}
+
+.modal .form-group {
+  margin-bottom: 18px;
+}
+
+.modal label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted-fg);
+  margin-bottom: 6px;
+}
+
+.modal input, .modal select {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.modal input:focus, .modal select:focus {
+  border-color: var(--accent);
+}
+
+.modal input::placeholder {
+  color: var(--muted-fg);
+}
+
+.modal .logo-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: var(--muted);
+  border-radius: 10px;
+  min-height: 48px;
+}
+
+.modal .logo-preview img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.modal .logo-preview span {
+  font-size: 13px;
+  color: var(--muted-fg);
+}
+
+.modal .logo-preview .loading {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.modal-actions button {
+  flex: 1;
+  height: 44px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-cancel {
+  background: var(--muted);
+  color: var(--fg);
+}
+
+.btn-cancel:hover {
+  background: var(--border);
+}
+
+.btn-save {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--accent-fg);
+}
+
+.btn-save:hover {
+  box-shadow: var(--shadow-accent);
+  transform: translateY(-1px);
+}
+
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ===== Footer ===== */
+footer {
+  text-align: center;
+  padding: 24px 0 40px;
+  color: var(--muted-fg);
+  font-size: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  header { padding-top: 32px; }
+  header h1 { font-size: 22px; }
+  .time-bar .time { font-size: 36px; }
+  .nav-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+  .nav-card { padding: 10px 12px; }
+  .nav-card .icon { width: 32px; height: 32px; font-size: 16px; }
+  .nav-card .icon img { width: 20px; height: 20px; }
+  .search-box button { padding: 0 18px; }
+  .settings-btn { top: 12px; right: 12px; width: 38px; height: 38px; font-size: 18px; }
+  .modal { padding: 24px; margin: 16px; }
+}
+</style>
+</head>
+<body>
+
+<button class="settings-btn" id="settingsBtn" title="设置">⚙️</button>
+
+<div class="container">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">凯</div>
+      <h1>凯</h1>
+    </div>
+    <p class="subtitle">你的个人导航站，一键直达常用网站</p>
+  </header>
+
+  <section class="search-section">
+    <form class="search-box" id="searchForm" action="https://www.baidu.com/s" method="get" target="_blank">
+      <input type="text" name="wd" id="searchInput" placeholder="搜索你想要的内容..." autocomplete="off">
+      <button type="submit">搜 索</button>
+    </form>
+    <div class="search-engines">
+      <label><input type="radio" name="engine" value="baidu" checked onchange="switchEngine(this.value)"> 百度</label>
+      <label><input type="radio" name="engine" value="google" onchange="switchEngine(this.value)"> Google</label>
+      <label><input type="radio" name="engine" value="bing" onchange="switchEngine(this.value)"> Bing</label>
+    </div>
+  </section>
+
+  <div class="time-bar">
+    <div class="time" id="clock">00:00</div>
+    <div class="date" id="dateStr"></div>
+  </div>
+
+  <div class="nav-sections" id="navSections"></div>
+</div>
+
+<footer>
+  <p>© 2026 凯 · 个人导航站</p>
+</footer>
+
+<!-- Add Site Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2>添加网站</h2>
+    <div class="form-group">
+      <label>网站地址</label>
+      <input type="url" id="siteUrl" placeholder="https://example.com" oninput="onUrlInput()">
+    </div>
+    <div class="form-group">
+      <label>网站名称</label>
+      <input type="text" id="siteName" placeholder="自动获取，也可手动输入">
+    </div>
+    <div class="form-group">
+      <label>网站描述</label>
+      <input type="text" id="siteDesc" placeholder="简短描述（可选）">
+    </div>
+    <div class="form-group">
+      <label>所属分类</label>
+      <select id="siteCategory"></select>
+    </div>
+    <div class="form-group">
+      <label>网站图标</label>
+      <div class="logo-preview" id="logoPreview">
+        <span>输入网址后自动获取</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" id="saveBtn" onclick="saveSite()">添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal-overlay" id="catModalOverlay">
+  <div class="modal">
+    <h2 id="catModalTitle">新建分类</h2>
+    <div class="form-group">
+      <label>分类名称</label>
+      <input type="text" id="catNameInput" placeholder="请输入分类名称">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeCatModal()">取消</button>
+      <button class="btn-save" id="catSaveBtn" onclick="saveCatModal()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal" style="max-width:380px;">
+    <h2 id="confirmTitle">确认</h2>
+    <p id="confirmMsg" style="color:var(--muted-fg);font-size:14px;line-height:1.6;margin-bottom:24px;"></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeConfirm(false)">取消</button>
+      <button class="btn-save" style="background:var(--danger);" onclick="closeConfirm(true)">确定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_CATEGORIES = ['常用工具', '开发资源', '社交媒体', '学习教育', '效率工具', '自定义'];
+
+const ORIGINAL_DEFAULT_SITES = [
+  { name: '百度', url: 'https://www.baidu.com', desc: '搜索引擎', category: '常用工具', emoji: '🔍', emojiBg: '#F1F5F9', emojiColor: '#0052FF' },
+  { name: 'Google 翻译', url: 'https://translate.google.com', desc: '多语言翻译', category: '常用工具', emoji: '🌐', emojiBg: '#EEF2FF', emojiColor: '#4F46E5' },
+  { name: 'Notion', url: 'https://www.notion.so', desc: '笔记与协作', category: '常用工具', emoji: '📝', emojiBg: '#F0FDF4', emojiColor: '#16A34A' },
+  { name: 'ChatGPT', url: 'https://chat.openai.com', desc: 'AI 对话助手', category: '常用工具', emoji: '🤖', emojiBg: '#F0F9FF', emojiColor: '#0284C7' },
+  { name: 'Canva', url: 'https://www.canva.cn', desc: '在线设计', category: '常用工具', emoji: '🎨', emojiBg: '#FFF7ED', emojiColor: '#EA580C' },
+  { name: 'GitHub', url: 'https://github.com', desc: '代码托管', category: '开发资源', emoji: '🐙', emojiBg: '#F1F5F9', emojiColor: '#0F172A' },
+  { name: 'StackOverflow', url: 'https://stackoverflow.com', desc: '技术问答', category: '开发资源', emoji: '📚', emojiBg: '#FFF7ED', emojiColor: '#F59E0B' },
+  { name: 'MDN', url: 'https://developer.mozilla.org', desc: 'Web 开发文档', category: '开发资源', emoji: '📖', emojiBg: '#EEF2FF', emojiColor: '#4F46E5' },
+  { name: 'CodePen', url: 'https://codepen.io', desc: '在线代码编辑', category: '开发资源', emoji: '✏️', emojiBg: '#F0FDF4', emojiColor: '#16A34A' },
+  { name: 'npm', url: 'https://www.npmjs.com', desc: '包管理器', category: '开发资源', emoji: '📦', emojiBg: '#F1F5F9', emojiColor: '#CB3837' },
+  { name: '微博', url: 'https://weibo.com', desc: '社交平台', category: '社交媒体', emoji: '📢', emojiBg: '#FFF1F2', emojiColor: '#E11D48' },
+  { name: '知乎', url: 'https://www.zhihu.com', desc: '知识社区', category: '社交媒体', emoji: '💡', emojiBg: '#EEF2FF', emojiColor: '#0066FF' },
+  { name: '哔哩哔哩', url: 'https://www.bilibili.com', desc: '视频社区', category: '社交媒体', emoji: '🎬', emojiBg: '#F0F9FF', emojiColor: '#00A1D6' },
+  { name: 'Twitter', url: 'https://twitter.com', desc: '全球社交', category: '社交媒体', emoji: '🐦', emojiBg: '#F0F9FF', emojiColor: '#1D9BF0' },
+  { name: 'YouTube', url: 'https://www.youtube.com', desc: '全球视频', category: '社交媒体', emoji: '▶️', emojiBg: '#FFF7ED', emojiColor: '#FF0000' },
+  { name: 'Coursera', url: 'https://www.coursera.org', desc: '在线课程', category: '学习教育', emoji: '🎓', emojiBg: '#EEF2FF', emojiColor: '#0056D2' },
+  { name: '中国大学MOOC', url: 'https://www.icourse163.org', desc: '国内课程', category: '学习教育', emoji: '🏫', emojiBg: '#F0FDF4', emojiColor: '#C41230' },
+  { name: '力扣', url: 'https://leetcode.cn', desc: '算法练习', category: '学习教育', emoji: '🧩', emojiBg: '#FFF7ED', emojiColor: '#FFA116' },
+  { name: 'W3Schools', url: 'https://www.w3schools.com', desc: 'Web 教程', category: '学习教育', emoji: '💻', emojiBg: '#F0FDF4', emojiColor: '#04AA6D' },
+  { name: 'Gmail', url: 'https://mail.google.com', desc: '邮件服务', category: '效率工具', emoji: '✉️', emojiBg: '#FFF7ED', emojiColor: '#EA4335' },
+  { name: 'Google Drive', url: 'https://drive.google.com', desc: '云存储', category: '效率工具', emoji: '📁', emojiBg: '#EEF2FF', emojiColor: '#4285F4' },
+  { name: 'Figma', url: 'https://www.figma.com', desc: '设计协作', category: '效率工具', emoji: '🎯', emojiBg: '#FFF1F2', emojiColor: '#A259FF' },
+  { name: 'Excalidraw', url: 'https://excalidraw.com', desc: '手绘白板', category: '效率工具', emoji: '✍️', emojiBg: '#F0FDF4', emojiColor: '#6965DB' },
+];
+
+let customSites = JSON.parse(localStorage.getItem('kai_custom_sites') || '[]');
+let customCategories = JSON.parse(localStorage.getItem('kai_custom_categories') || '[]');
+let deletedDefaultUrls = JSON.parse(localStorage.getItem('kai_deleted_defaults') || '[]');
+let editedDefaults = JSON.parse(localStorage.getItem('kai_edited_defaults') || '{}');
+let isEditMode = false;
+let currentLogoUrl = '';
+let urlDebounce = null;
+let editingSiteKey = null;
+
+function getSiteKey(site) {
+  return site.url + '::' + site.name;
+}
+
+function getEffectiveDefaultSites() {
+  return ORIGINAL_DEFAULT_SITES
+    .filter(s => !deletedDefaultUrls.includes(s.url))
+    .map(s => editedDefaults[s.url] ? { ...s, ...editedDefaults[s.url] } : s);
+}
+
+function getAllCategories() {
+  const cats = [...DEFAULT_CATEGORIES];
+  customCategories.forEach(c => { if (!cats.includes(c)) cats.push(c); });
+  return cats;
+}
+
+function getFaviconUrl(url) {
+  try {
+    const u = new URL(url);
+    return 'https://www.google.com/s2/favicons?domain=' + u.hostname + '&sz=64';
+  } catch { return ''; }
+}
+
+function extractDomain(url) {
+  try { return new URL(url).hostname; } catch { return ''; }
+}
+
+function renderNav() {
+  const container = document.getElementById('navSections');
+  container.innerHTML = '';
+
+  const defaultSites = getEffectiveDefaultSites();
+  const allSites = [...defaultSites, ...customSites];
+  const categories = getAllCategories();
+  const usedCats = [...new Set(allSites.map(s => s.category))].filter(c => categories.includes(c));
+
+  usedCats.forEach(cat => {
+    const sites = allSites.filter(s => s.category === cat);
+    const group = document.createElement('div');
+    group.className = 'nav-group';
+
+    const title = document.createElement('div');
+    title.className = 'nav-group-title';
+    const titleText = document.createTextNode(cat);
+    title.appendChild(titleText);
+
+    const catActions = document.createElement('div');
+    catActions.className = 'cat-actions';
+
+    const catEditBtn = document.createElement('button');
+    catEditBtn.className = 'cat-edit-btn';
+    catEditBtn.textContent = '✎';
+    catEditBtn.title = '重命名分类';
+    catEditBtn.onclick = function(e) {
+      e.stopPropagation();
+      renameCategory(cat);
+    };
+    catActions.appendChild(catEditBtn);
+
+    const catDelBtn = document.createElement('button');
+    catDelBtn.className = 'cat-del-btn';
+    catDelBtn.textContent = '×';
+    catDelBtn.title = '删除分类';
+    catDelBtn.onclick = function(e) {
+      e.stopPropagation();
+      deleteCategory(cat);
+    };
+    catActions.appendChild(catDelBtn);
+
+    title.appendChild(catActions);
+    group.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'nav-grid';
+
+    sites.forEach(site => {
+      const isCustom = customSites.some(cs => cs.url === site.url && cs.name === site.name);
+      const card = document.createElement('a');
+      card.className = 'nav-card' + (isCustom ? ' custom' : '');
+      card.href = site.url;
+      card.target = '_blank';
+      card.onclick = function(e) {
+        if (isEditMode) {
+          e.preventDefault();
+          openEditModal(site, isCustom);
+        }
+      };
+
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'icon';
+      if (site.favicon) {
+        iconDiv.style.background = '#F1F5F9';
+        const img = document.createElement('img');
+        img.src = site.favicon;
+        img.alt = site.name;
+        img.onerror = function() {
+          this.parentElement.innerHTML = '<span style="font-size:18px;">🔗</span>';
+        };
+        iconDiv.appendChild(img);
+      } else {
+        iconDiv.style.background = site.emojiBg || '#F1F5F9';
+        iconDiv.style.color = site.emojiColor || '#0052FF';
+        iconDiv.textContent = site.emoji || '🔗';
+      }
+      card.appendChild(iconDiv);
+
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'info';
+      infoDiv.innerHTML = '<div class="name">' + escapeHtml(site.name) + '</div><div class="desc">' + escapeHtml(site.desc || '') + '</div>';
+      card.appendChild(infoDiv);
+
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'card-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'edit-btn';
+      editBtn.textContent = '✎';
+      editBtn.title = '编辑';
+      editBtn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openEditModal(site, isCustom);
+      };
+      actionsDiv.appendChild(editBtn);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-btn';
+      delBtn.textContent = '×';
+      delBtn.title = '删除';
+      delBtn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        deleteSite(site, isCustom);
+      };
+      actionsDiv.appendChild(delBtn);
+
+      card.appendChild(actionsDiv);
+      grid.appendChild(card);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-card';
+    addBtn.textContent = '+ 添加网站';
+    addBtn.onclick = function() { openModal(cat); };
+    grid.appendChild(addBtn);
+
+    group.appendChild(grid);
+    container.appendChild(group);
+  });
+
+  const addCatBtn = document.createElement('button');
+  addCatBtn.className = 'add-category-btn';
+  addCatBtn.textContent = '+ 新建分类';
+  addCatBtn.onclick = function() { addCategory(); };
+  container.appendChild(addCatBtn);
+}
+
+let catModalCallback = null;
+let confirmCallback = null;
+
+function addCategory() {
+  document.getElementById('catModalTitle').textContent = '新建分类';
+  document.getElementById('catNameInput').value = '';
+  document.getElementById('catNameInput').placeholder = '请输入分类名称';
+  catModalCallback = function(name) {
+    if (getAllCategories().includes(name)) { showToast('该分类已存在'); return; }
+    customCategories.push(name);
+    localStorage.setItem('kai_custom_categories', JSON.stringify(customCategories));
+    renderNav();
+  };
+  document.getElementById('catModalOverlay').classList.add('active');
+  setTimeout(() => document.getElementById('catNameInput').focus(), 100);
+}
+
+function renameCategory(oldName) {
+  document.getElementById('catModalTitle').textContent = '重命名分类';
+  document.getElementById('catNameInput').value = oldName;
+  document.getElementById('catNameInput').placeholder = '请输入新的分类名称';
+  catModalCallback = function(newName) {
+    if (newName === oldName) return;
+    if (getAllCategories().includes(newName)) { showToast('该分类名称已存在'); return; }
+
+    const defaultSites = getEffectiveDefaultSites();
+    if (defaultSites.some(s => s.category === oldName)) {
+      defaultSites.filter(s => s.category === oldName).forEach(s => {
+        if (!editedDefaults[s.url]) editedDefaults[s.url] = {};
+        editedDefaults[s.url].category = newName;
+      });
+      localStorage.setItem('kai_edited_defaults', JSON.stringify(editedDefaults));
+    }
+
+    if (customSites.some(s => s.category === oldName)) {
+      customSites.forEach(s => { if (s.category === oldName) s.category = newName; });
+      localStorage.setItem('kai_custom_sites', JSON.stringify(customSites));
+    }
+
+    if (customCategories.includes(oldName)) {
+      customCategories[customCategories.indexOf(oldName)] = newName;
+      localStorage.setItem('kai_custom_categories', JSON.stringify(customCategories));
+    }
+
+    renderNav();
+  };
+  document.getElementById('catModalOverlay').classList.add('active');
+  setTimeout(() => { const inp = document.getElementById('catNameInput'); inp.focus(); inp.select(); }, 100);
+}
+
+function deleteCategory(catName) {
+  const defaultSites = getEffectiveDefaultSites();
+  const sitesInCat = [...defaultSites, ...customSites].filter(s => s.category === catName);
+  const msg = sitesInCat.length > 0
+    ? '分类「' + catName + '」下有 ' + sitesInCat.length + ' 个网站，删除分类将同时删除这些网站，确定？'
+    : '确定删除分类「' + catName + '」？';
+
+  showConfirm('删除分类', msg, function(ok) {
+    if (!ok) return;
+
+    defaultSites.filter(s => s.category === catName).forEach(s => {
+      if (!deletedDefaultUrls.includes(s.url)) deletedDefaultUrls.push(s.url);
+    });
+    localStorage.setItem('kai_deleted_defaults', JSON.stringify(deletedDefaultUrls));
+
+    customSites = customSites.filter(s => s.category !== catName);
+    localStorage.setItem('kai_custom_sites', JSON.stringify(customSites));
+
+    if (customCategories.includes(catName)) {
+      customCategories = customCategories.filter(c => c !== catName);
+      localStorage.setItem('kai_custom_categories', JSON.stringify(customCategories));
+    }
+
+    renderNav();
+  });
+}
+
+function saveCatModal() {
+  const name = document.getElementById('catNameInput').value.trim();
+  if (!name) return;
+  if (catModalCallback) catModalCallback(name);
+  closeCatModal();
+}
+
+function closeCatModal() {
+  document.getElementById('catModalOverlay').classList.remove('active');
+  catModalCallback = null;
+}
+
+function showConfirm(title, msg, callback) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  confirmCallback = callback;
+  document.getElementById('confirmOverlay').classList.add('active');
+}
+
+function closeConfirm(result) {
+  document.getElementById('confirmOverlay').classList.remove('active');
+  if (confirmCallback) confirmCallback(result);
+  confirmCallback = null;
+}
+
+function showToast(msg) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--accent-fg);padding:10px 24px;border-radius:10px;font-size:14px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function populateCategorySelect(selectedCat) {
+  const select = document.getElementById('siteCategory');
+  select.innerHTML = '';
+  getAllCategories().forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    if (cat === (selectedCat || '自定义')) opt.selected = true;
+    select.appendChild(opt);
+  });
+  const newCatOpt = document.createElement('option');
+  newCatOpt.value = '__new__';
+  newCatOpt.textContent = '➕ 新建分类...';
+  select.appendChild(newCatOpt);
+
+  select.onchange = function() {
+    if (this.value === '__new__') {
+      this.value = selectedCat || '自定义';
+      addCategory();
+    }
+  };
+}
+
+function openModal(category) {
+  editingSiteKey = null;
+  document.querySelector('.modal h2').textContent = '添加网站';
+  document.getElementById('siteUrl').value = '';
+  document.getElementById('siteName').value = '';
+  document.getElementById('siteDesc').value = '';
+  document.getElementById('logoPreview').innerHTML = '<span>输入网址后自动获取</span>';
+  document.getElementById('siteUrl').disabled = false;
+  currentLogoUrl = '';
+
+  populateCategorySelect(category);
+
+  document.getElementById('modalOverlay').classList.add('active');
+  document.getElementById('saveBtn').disabled = false;
+  document.getElementById('saveBtn').textContent = '添加';
+  setTimeout(() => document.getElementById('siteUrl').focus(), 100);
+}
+
+function openEditModal(site, isCustom) {
+  editingSiteKey = isCustom ? getSiteKey(site) : site.url;
+  document.querySelector('.modal h2').textContent = '编辑网站';
+  document.getElementById('siteUrl').value = site.url;
+  document.getElementById('siteUrl').disabled = true;
+  document.getElementById('siteName').value = site.name;
+  document.getElementById('siteDesc').value = site.desc || '';
+  currentLogoUrl = site.favicon || getFaviconUrl(site.url);
+
+  populateCategorySelect(site.category);
+
+  const preview = document.getElementById('logoPreview');
+  if (currentLogoUrl) {
+    preview.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = currentLogoUrl;
+    img.alt = '图标';
+    preview.appendChild(img);
+    const span = document.createElement('span');
+    span.textContent = extractDomain(site.url) + ' 的图标';
+    preview.appendChild(span);
+  } else {
+    preview.innerHTML = '<span>无图标</span>';
+  }
+
+  document.getElementById('modalOverlay').classList.add('active');
+  document.getElementById('saveBtn').disabled = false;
+  document.getElementById('saveBtn').textContent = '保存';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  document.getElementById('siteUrl').disabled = false;
+  editingSiteKey = null;
+}
+
+function onUrlInput() {
+  clearTimeout(urlDebounce);
+  const url = document.getElementById('siteUrl').value.trim();
+  if (!url) {
+    document.getElementById('logoPreview').innerHTML = '<span>输入网址后自动获取</span>';
+    currentLogoUrl = '';
+    return;
+  }
+
+  document.getElementById('logoPreview').innerHTML = '<span class="loading">正在获取图标...</span>';
+
+  urlDebounce = setTimeout(() => {
+    let normalized = url;
+    if (!/^https?:\/\//i.test(normalized)) normalized = 'https://' + normalized;
+    document.getElementById('siteUrl').value = normalized;
+
+    const faviconUrl = getFaviconUrl(normalized);
+    currentLogoUrl = faviconUrl;
+
+    const domain = extractDomain(normalized);
+    if (!document.getElementById('siteName').value) {
+      document.getElementById('siteName').value = domain;
+    }
+
+    const preview = document.getElementById('logoPreview');
+    if (faviconUrl) {
+      preview.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = faviconUrl;
+      img.alt = '图标';
+      img.onerror = function() {
+        preview.innerHTML = '<span>图标获取失败，将使用默认图标</span>';
+        currentLogoUrl = '';
+      };
+      preview.appendChild(img);
+      const span = document.createElement('span');
+      span.textContent = domain + ' 的图标';
+      preview.appendChild(span);
+    } else {
+      preview.innerHTML = '<span>无法获取图标</span>';
+    }
+  }, 500);
+}
+
+function saveSite() {
+  const url = document.getElementById('siteUrl').value.trim();
+  const name = document.getElementById('siteName').value.trim();
+  const desc = document.getElementById('siteDesc').value.trim();
+  const category = document.getElementById('siteCategory').value;
+
+  if (!url) { alert('请输入网站地址'); return; }
+  if (!name) { alert('请输入网站名称'); return; }
+
+  if (editingSiteKey) {
+    const isCustomEdit = customSites.some(s => getSiteKey(s) === editingSiteKey);
+
+    if (isCustomEdit) {
+      const idx = customSites.findIndex(s => getSiteKey(s) === editingSiteKey);
+      if (idx !== -1) {
+        customSites[idx].name = name;
+        customSites[idx].desc = desc;
+        customSites[idx].category = category;
+        customSites[idx].favicon = currentLogoUrl || customSites[idx].favicon;
+      }
+      localStorage.setItem('kai_custom_sites', JSON.stringify(customSites));
+    } else {
+      editedDefaults[editingSiteKey] = {
+        name: name,
+        desc: desc,
+        category: category,
+        favicon: currentLogoUrl || undefined
+      };
+      localStorage.setItem('kai_edited_defaults', JSON.stringify(editedDefaults));
+    }
+  } else {
+    if (customSites.some(s => s.url === url)) {
+      alert('该网站已存在');
+      return;
+    }
+    customSites.push({
+      name: name,
+      url: url,
+      desc: desc || '',
+      category: category,
+      favicon: currentLogoUrl || ''
+    });
+    localStorage.setItem('kai_custom_sites', JSON.stringify(customSites));
+  }
+
+  closeModal();
+  renderNav();
+}
+
+function deleteSite(site, isCustom) {
+  showConfirm('删除网站', '确定删除「' + site.name + '」？', function(ok) {
+    if (!ok) return;
+    if (isCustom) {
+      customSites = customSites.filter(s => !(s.url === site.url && s.name === site.name));
+      localStorage.setItem('kai_custom_sites', JSON.stringify(customSites));
+    } else {
+      deletedDefaultUrls.push(site.url);
+      localStorage.setItem('kai_deleted_defaults', JSON.stringify(deletedDefaultUrls));
+    }
+    renderNav();
+  });
+}
+
+document.getElementById('settingsBtn').addEventListener('click', function() {
+  isEditMode = !isEditMode;
+  document.body.classList.toggle('edit-mode', isEditMode);
+  this.textContent = isEditMode ? '✓' : '⚙️';
+  this.title = isEditMode ? '完成编辑' : '设置';
+});
+
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+document.getElementById('catModalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeCatModal();
+});
+
+document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeConfirm(false);
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeModal(); closeCatModal(); closeConfirm(false); }
+});
+
+const engines = {
+  baidu:  { action: 'https://www.baidu.com/s',  param: 'wd' },
+  google: { action: 'https://www.google.com/search', param: 'q' },
+  bing:   { action: 'https://www.bing.com/search',  param: 'q' }
+};
+
+let currentEngine = 'baidu';
+
+function switchEngine(engine) {
+  currentEngine = engine;
+  const form = document.getElementById('searchForm');
+  form.action = engines[engine].action;
+  const input = document.getElementById('searchInput');
+  input.name = engines[engine].param;
+  const placeholders = { baidu: '搜索你想要的内容...', google: 'Search with Google...', bing: 'Search with Bing...' };
+  input.placeholder = placeholders[engine];
+}
+
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('clock').textContent = h + ':' + m;
+
+  const weekdays = ['日','一','二','三','四','五','六'];
+  const dateStr = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 星期' + weekdays[now.getDay()];
+  document.getElementById('dateStr').textContent = dateStr;
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+
+renderNav();
+document.getElementById('searchInput').focus();
+</script>
+
+</body>
+</html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -317,6 +317,42 @@ body.edit-mode .nav-group-title .cat-actions {
 .nav-group-title .cat-actions .cat-del-btn:hover {
   color: var(--danger);
   border-color: var(--danger);
+}
+
+.nav-group[draggable="true"] {
+  cursor: grab;
+}
+
+.nav-group[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.nav-group.dragging {
+  opacity: 0.4;
+}
+
+.nav-group.drag-over-top {
+  border-top: 3px solid var(--accent);
+  padding-top: 0;
+}
+
+.nav-group.drag-over-bottom {
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 0;
+}
+
+.nav-group .drag-hint {
+  display: none;
+  font-size: 11px;
+  color: var(--accent);
+  margin-left: 8px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+body.edit-mode .nav-group .drag-hint {
+  display: inline;
 }
 
 .add-category-btn {
@@ -766,142 +802,179 @@ footer {
   </div>
 </div>
 
+<!-- Password Modal -->
+<div class="modal-overlay" id="pwdModalOverlay">
+  <div class="modal" style="max-width:380px;">
+    <h2 id="pwdModalTitle">输入密码</h2>
+    <div class="form-group">
+      <label id="pwdLabel">请输入编辑密码</label>
+      <input type="password" id="pwdInput" placeholder="请输入密码" onkeydown="if(event.key==='Enter')submitPwd()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closePwdModal()">取消</button>
+      <button class="btn-save" onclick="submitPwd()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Set Password Modal -->
+<div class="modal-overlay" id="setPwdOverlay">
+  <div class="modal" style="max-width:380px;">
+    <h2>设置编辑密码</h2>
+    <div class="form-group">
+      <label>新密码</label>
+      <input type="password" id="newPwdInput" placeholder="请输入新密码">
+    </div>
+    <div class="form-group">
+      <label>确认密码</label>
+      <input type="password" id="confirmPwdInput" placeholder="请再次输入密码" onkeydown="if(event.key==='Enter')saveNewPwd()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSetPwdModal()">取消</button>
+      <button class="btn-save" onclick="saveNewPwd()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Token Modal -->
+<div class="modal-overlay" id="tokenOverlay">
+  <div class="modal" style="max-width:460px;">
+    <h2>🔑 管理员配置</h2>
+    <div class="form-group">
+      <label>GitHub Token</label>
+      <input type="password" id="adminTokenInput" placeholder="ghp_xxxxxxxxxxxx">
+      <div style="font-size:12px;color:var(--muted-fg);margin-top:6px;line-height:1.5;">
+        前往 <a href="https://github.com/settings/tokens/new" target="_blank" style="color:var(--accent);">GitHub 创建 Token</a>，勾选 <b>repo</b> 权限
+      </div>
+    </div>
+    <div class="form-group">
+      <label>仓库信息</label>
+      <input type="text" id="repoInfoInput" placeholder="用户名/仓库名，如 kai1578/-">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeTokenModal()">取消</button>
+      <button class="btn-save" onclick="saveTokenSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
 <script>
-const DEFAULT_CATEGORIES = ['常用工具', '开发资源', '社交媒体', '学习教育', '效率工具', '自定义'];
+var siteData = { categories: [], sites: [], categoryOrder: [] };
+var isEditMode = false;
+var currentLogoUrl = '';
+var urlDebounce = null;
+var editingSiteIdx = -1;
+var dragSrcEl = null;
+var adminToken = localStorage.getItem('kai_admin_token') || '';
+var repoInfo = localStorage.getItem('kai_repo_info') || '';
+var dataSha = '';
+var syncDebounce = null;
+var editPasswordHash = localStorage.getItem('kai_edit_pwd') || '';
 
-const ORIGINAL_DEFAULT_SITES = [
-  { name: '百度', url: 'https://www.baidu.com', desc: '搜索引擎', category: '常用工具', emoji: '🔍', emojiBg: '#F1F5F9', emojiColor: '#0052FF' },
-  { name: 'Google 翻译', url: 'https://translate.google.com', desc: '多语言翻译', category: '常用工具', emoji: '🌐', emojiBg: '#EEF2FF', emojiColor: '#4F46E5' },
-  { name: 'Notion', url: 'https://www.notion.so', desc: '笔记与协作', category: '常用工具', emoji: '📝', emojiBg: '#F0FDF4', emojiColor: '#16A34A' },
-  { name: 'ChatGPT', url: 'https://chat.openai.com', desc: 'AI 对话助手', category: '常用工具', emoji: '🤖', emojiBg: '#F0F9FF', emojiColor: '#0284C7' },
-  { name: 'Canva', url: 'https://www.canva.cn', desc: '在线设计', category: '常用工具', emoji: '🎨', emojiBg: '#FFF7ED', emojiColor: '#EA580C' },
-  { name: 'GitHub', url: 'https://github.com', desc: '代码托管', category: '开发资源', emoji: '🐙', emojiBg: '#F1F5F9', emojiColor: '#0F172A' },
-  { name: 'StackOverflow', url: 'https://stackoverflow.com', desc: '技术问答', category: '开发资源', emoji: '📚', emojiBg: '#FFF7ED', emojiColor: '#F59E0B' },
-  { name: 'MDN', url: 'https://developer.mozilla.org', desc: 'Web 开发文档', category: '开发资源', emoji: '📖', emojiBg: '#EEF2FF', emojiColor: '#4F46E5' },
-  { name: 'CodePen', url: 'https://codepen.io', desc: '在线代码编辑', category: '开发资源', emoji: '✏️', emojiBg: '#F0FDF4', emojiColor: '#16A34A' },
-  { name: 'npm', url: 'https://www.npmjs.com', desc: '包管理器', category: '开发资源', emoji: '📦', emojiBg: '#F1F5F9', emojiColor: '#CB3837' },
-  { name: '微博', url: 'https://weibo.com', desc: '社交平台', category: '社交媒体', emoji: '📢', emojiBg: '#FFF1F2', emojiColor: '#E11D48' },
-  { name: '知乎', url: 'https://www.zhihu.com', desc: '知识社区', category: '社交媒体', emoji: '💡', emojiBg: '#EEF2FF', emojiColor: '#0066FF' },
-  { name: '哔哩哔哩', url: 'https://www.bilibili.com', desc: '视频社区', category: '社交媒体', emoji: '🎬', emojiBg: '#F0F9FF', emojiColor: '#00A1D6' },
-  { name: 'Twitter', url: 'https://twitter.com', desc: '全球社交', category: '社交媒体', emoji: '🐦', emojiBg: '#F0F9FF', emojiColor: '#1D9BF0' },
-  { name: 'YouTube', url: 'https://www.youtube.com', desc: '全球视频', category: '社交媒体', emoji: '▶️', emojiBg: '#FFF7ED', emojiColor: '#FF0000' },
-  { name: 'Coursera', url: 'https://www.coursera.org', desc: '在线课程', category: '学习教育', emoji: '🎓', emojiBg: '#EEF2FF', emojiColor: '#0056D2' },
-  { name: '中国大学MOOC', url: 'https://www.icourse163.org', desc: '国内课程', category: '学习教育', emoji: '🏫', emojiBg: '#F0FDF4', emojiColor: '#C41230' },
-  { name: '力扣', url: 'https://leetcode.cn', desc: '算法练习', category: '学习教育', emoji: '🧩', emojiBg: '#FFF7ED', emojiColor: '#FFA116' },
-  { name: 'W3Schools', url: 'https://www.w3schools.com', desc: 'Web 教程', category: '学习教育', emoji: '💻', emojiBg: '#F0FDF4', emojiColor: '#04AA6D' },
-  { name: 'Gmail', url: 'https://mail.google.com', desc: '邮件服务', category: '效率工具', emoji: '✉️', emojiBg: '#FFF7ED', emojiColor: '#EA4335' },
-  { name: 'Google Drive', url: 'https://drive.google.com', desc: '云存储', category: '效率工具', emoji: '📁', emojiBg: '#EEF2FF', emojiColor: '#4285F4' },
-  { name: 'Figma', url: 'https://www.figma.com', desc: '设计协作', category: '效率工具', emoji: '🎯', emojiBg: '#FFF1F2', emojiColor: '#A259FF' },
-  { name: 'Excalidraw', url: 'https://excalidraw.com', desc: '手绘白板', category: '效率工具', emoji: '✍️', emojiBg: '#F0FDF4', emojiColor: '#6965DB' },
-];
-
-let customSites = JSON.parse(localStorage.getItem('kai_custom_sites') || '[]');
-let customCategories = JSON.parse(localStorage.getItem('kai_custom_categories') || '[]');
-let deletedDefaultUrls = JSON.parse(localStorage.getItem('kai_deleted_defaults') || '[]');
-let editedDefaults = JSON.parse(localStorage.getItem('kai_edited_defaults') || '{}');
-let isEditMode = false;
-let currentLogoUrl = '';
-let urlDebounce = null;
-let editingSiteKey = null;
-
-function getSiteKey(site) {
-  return site.url + '::' + site.name;
-}
-
-function getEffectiveDefaultSites() {
-  return ORIGINAL_DEFAULT_SITES
-    .filter(s => !deletedDefaultUrls.includes(s.url))
-    .map(s => editedDefaults[s.url] ? { ...s, ...editedDefaults[s.url] } : s);
+function simpleHash(str) {
+  var h = 0;
+  for (var i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  return 'h_' + Math.abs(h).toString(36);
 }
 
 function getAllCategories() {
-  const cats = [...DEFAULT_CATEGORIES];
-  customCategories.forEach(c => { if (!cats.includes(c)) cats.push(c); });
-  return cats;
+  return siteData.categories || [];
 }
 
 function getFaviconUrl(url) {
-  try {
-    const u = new URL(url);
-    return 'https://www.google.com/s2/favicons?domain=' + u.hostname + '&sz=64';
-  } catch { return ''; }
+  try { return 'https://www.google.com/s2/favicons?domain=' + new URL(url).hostname + '&sz=64'; } catch { return ''; }
 }
 
 function extractDomain(url) {
   try { return new URL(url).hostname; } catch { return ''; }
 }
 
+function pushData() {
+  if (!adminToken || !repoInfo) return;
+  clearTimeout(syncDebounce);
+  syncDebounce = setTimeout(function() {
+    var content = JSON.stringify(siteData, null, 2);
+    var body = { message: '更新导航数据', content: btoa(unescape(encodeURIComponent(content))), sha: dataSha };
+    fetch('https://api.github.com/repos/' + repoInfo + '/contents/data.json', {
+      method: 'PUT',
+      headers: { 'Authorization': 'token ' + adminToken, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function(r) { return r.json(); }).then(function(res) {
+      if (res.content && res.content.sha) dataSha = res.content.sha;
+      else if (res.message) console.warn('推送失败:', res.message);
+    });
+  }, 2000);
+}
+
 function renderNav() {
-  const container = document.getElementById('navSections');
+  var container = document.getElementById('navSections');
   container.innerHTML = '';
+  var categories = getAllCategories();
+  var categoryOrder = siteData.categoryOrder || [];
+  var usedCats = [];
+  siteData.sites.forEach(function(s) { if (categories.indexOf(s.category) !== -1 && usedCats.indexOf(s.category) === -1) usedCats.push(s.category); });
 
-  const defaultSites = getEffectiveDefaultSites();
-  const allSites = [...defaultSites, ...customSites];
-  const categories = getAllCategories();
-  const usedCats = [...new Set(allSites.map(s => s.category))].filter(c => categories.includes(c));
+  usedCats.sort(function(a, b) {
+    var ai = categoryOrder.indexOf(a), bi = categoryOrder.indexOf(b);
+    if (ai === -1 && bi === -1) return 0;
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
 
-  usedCats.forEach(cat => {
-    const sites = allSites.filter(s => s.category === cat);
-    const group = document.createElement('div');
+  usedCats.forEach(function(cat) {
+    var sites = siteData.sites.filter(function(s) { return s.category === cat; });
+    var group = document.createElement('div');
     group.className = 'nav-group';
 
-    const title = document.createElement('div');
+    var title = document.createElement('div');
     title.className = 'nav-group-title';
-    const titleText = document.createTextNode(cat);
-    title.appendChild(titleText);
+    title.appendChild(document.createTextNode(cat));
 
-    const catActions = document.createElement('div');
+    var catActions = document.createElement('div');
     catActions.className = 'cat-actions';
 
-    const catEditBtn = document.createElement('button');
+    var catEditBtn = document.createElement('button');
     catEditBtn.className = 'cat-edit-btn';
     catEditBtn.textContent = '✎';
     catEditBtn.title = '重命名分类';
-    catEditBtn.onclick = function(e) {
-      e.stopPropagation();
-      renameCategory(cat);
-    };
+    catEditBtn.onclick = function(e) { e.stopPropagation(); renameCategory(cat); };
     catActions.appendChild(catEditBtn);
 
-    const catDelBtn = document.createElement('button');
+    var catDelBtn = document.createElement('button');
     catDelBtn.className = 'cat-del-btn';
     catDelBtn.textContent = '×';
     catDelBtn.title = '删除分类';
-    catDelBtn.onclick = function(e) {
-      e.stopPropagation();
-      deleteCategory(cat);
-    };
+    catDelBtn.onclick = function(e) { e.stopPropagation(); deleteCategory(cat); };
     catActions.appendChild(catDelBtn);
 
     title.appendChild(catActions);
+
+    var dragHint = document.createElement('span');
+    dragHint.className = 'drag-hint';
+    dragHint.textContent = '⇅ 拖拽排序';
+    title.appendChild(dragHint);
     group.appendChild(title);
 
-    const grid = document.createElement('div');
+    var grid = document.createElement('div');
     grid.className = 'nav-grid';
 
-    sites.forEach(site => {
-      const isCustom = customSites.some(cs => cs.url === site.url && cs.name === site.name);
-      const card = document.createElement('a');
-      card.className = 'nav-card' + (isCustom ? ' custom' : '');
+    sites.forEach(function(site) {
+      var idx = siteData.sites.indexOf(site);
+      var card = document.createElement('a');
+      card.className = 'nav-card';
       card.href = site.url;
       card.target = '_blank';
-      card.onclick = function(e) {
-        if (isEditMode) {
-          e.preventDefault();
-          openEditModal(site, isCustom);
-        }
-      };
+      card.onclick = function(e) { if (isEditMode) { e.preventDefault(); openEditModal(idx); } };
 
-      const iconDiv = document.createElement('div');
+      var iconDiv = document.createElement('div');
       iconDiv.className = 'icon';
       if (site.favicon) {
         iconDiv.style.background = '#F1F5F9';
-        const img = document.createElement('img');
+        var img = document.createElement('img');
         img.src = site.favicon;
         img.alt = site.name;
-        img.onerror = function() {
-          this.parentElement.innerHTML = '<span style="font-size:18px;">🔗</span>';
-        };
+        img.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px;">🔗</span>'; };
         iconDiv.appendChild(img);
       } else {
         iconDiv.style.background = site.emojiBg || '#F1F5F9';
@@ -910,41 +983,33 @@ function renderNav() {
       }
       card.appendChild(iconDiv);
 
-      const infoDiv = document.createElement('div');
+      var infoDiv = document.createElement('div');
       infoDiv.className = 'info';
       infoDiv.innerHTML = '<div class="name">' + escapeHtml(site.name) + '</div><div class="desc">' + escapeHtml(site.desc || '') + '</div>';
       card.appendChild(infoDiv);
 
-      const actionsDiv = document.createElement('div');
+      var actionsDiv = document.createElement('div');
       actionsDiv.className = 'card-actions';
 
-      const editBtn = document.createElement('button');
+      var editBtn = document.createElement('button');
       editBtn.className = 'edit-btn';
       editBtn.textContent = '✎';
       editBtn.title = '编辑';
-      editBtn.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        openEditModal(site, isCustom);
-      };
+      editBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); openEditModal(idx); };
       actionsDiv.appendChild(editBtn);
 
-      const delBtn = document.createElement('button');
+      var delBtn = document.createElement('button');
       delBtn.className = 'delete-btn';
       delBtn.textContent = '×';
       delBtn.title = '删除';
-      delBtn.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        deleteSite(site, isCustom);
-      };
+      delBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); deleteSite(idx); };
       actionsDiv.appendChild(delBtn);
 
       card.appendChild(actionsDiv);
       grid.appendChild(card);
     });
 
-    const addBtn = document.createElement('button');
+    var addBtn = document.createElement('button');
     addBtn.className = 'add-card';
     addBtn.textContent = '+ 添加网站';
     addBtn.onclick = function() { openModal(cat); };
@@ -954,15 +1019,81 @@ function renderNav() {
     container.appendChild(group);
   });
 
-  const addCatBtn = document.createElement('button');
+  var addCatBtn = document.createElement('button');
   addCatBtn.className = 'add-category-btn';
   addCatBtn.textContent = '+ 新建分类';
   addCatBtn.onclick = function() { addCategory(); };
   container.appendChild(addCatBtn);
+
+  if (isEditMode) {
+    var pwdBtn = document.createElement('button');
+    pwdBtn.className = 'add-category-btn';
+    pwdBtn.textContent = editPasswordHash ? '🔒 修改编辑密码' : '🔓 设置编辑密码';
+    pwdBtn.onclick = function() {
+      if (editPasswordHash) {
+        openPwdModal('验证身份', '请输入当前编辑密码', function(pwd) {
+          if (simpleHash(pwd) === editPasswordHash) openSetPwdModal();
+          else showToast('密码错误');
+        });
+      } else openSetPwdModal();
+    };
+    container.appendChild(pwdBtn);
+
+    var tokenBtn = document.createElement('button');
+    tokenBtn.className = 'add-category-btn';
+    tokenBtn.textContent = adminToken ? '🔑 管理员配置' : '🔑 配置管理员';
+    tokenBtn.onclick = function() { openTokenModal(); };
+    container.appendChild(tokenBtn);
+  }
+
+  if (isEditMode) {
+    var groups = container.querySelectorAll('.nav-group');
+    groups.forEach(function(g) {
+      g.setAttribute('draggable', 'true');
+      g.addEventListener('dragstart', function(e) {
+        dragSrcEl = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', '');
+      });
+      g.addEventListener('dragend', function() {
+        this.classList.remove('dragging');
+        container.querySelectorAll('.nav-group').forEach(function(el) { el.classList.remove('drag-over-top', 'drag-over-bottom'); });
+      });
+      g.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (dragSrcEl === this) return;
+        var rect = this.getBoundingClientRect();
+        this.classList.remove('drag-over-top', 'drag-over-bottom');
+        this.classList.add(e.clientY < rect.top + rect.height / 2 ? 'drag-over-top' : 'drag-over-bottom');
+      });
+      g.addEventListener('dragleave', function() { this.classList.remove('drag-over-top', 'drag-over-bottom'); });
+      g.addEventListener('drop', function(e) {
+        e.preventDefault();
+        if (dragSrcEl === this) return;
+        var rect = this.getBoundingClientRect();
+        var midY = rect.top + rect.height / 2;
+        var srcCat = dragSrcEl.querySelector('.nav-group-title').childNodes[0].textContent;
+        var targetCat = this.querySelector('.nav-group-title').childNodes[0].textContent;
+        var co = siteData.categoryOrder || [];
+        var si = co.indexOf(srcCat), ti = co.indexOf(targetCat);
+        if (si === -1) { co.push(srcCat); si = co.length - 1; }
+        if (ti === -1) { co.push(targetCat); ti = co.length - 1; }
+        co.splice(si, 1);
+        ti = co.indexOf(targetCat);
+        co.splice(e.clientY < midY ? ti : ti + 1, 0, srcCat);
+        siteData.categoryOrder = co;
+        pushData();
+        renderNav();
+      });
+    });
+  }
 }
 
-let catModalCallback = null;
-let confirmCallback = null;
+var catModalCallback = null;
+var confirmCallback = null;
+var pwdCallback = null;
 
 function addCategory() {
   document.getElementById('catModalTitle').textContent = '新建分类';
@@ -970,12 +1101,12 @@ function addCategory() {
   document.getElementById('catNameInput').placeholder = '请输入分类名称';
   catModalCallback = function(name) {
     if (getAllCategories().includes(name)) { showToast('该分类已存在'); return; }
-    customCategories.push(name);
-    localStorage.setItem('kai_custom_categories', JSON.stringify(customCategories));
+    siteData.categories.push(name);
+    pushData();
     renderNav();
   };
   document.getElementById('catModalOverlay').classList.add('active');
-  setTimeout(() => document.getElementById('catNameInput').focus(), 100);
+  setTimeout(function() { document.getElementById('catNameInput').focus(); }, 100);
 }
 
 function renameCategory(oldName) {
@@ -985,61 +1116,36 @@ function renameCategory(oldName) {
   catModalCallback = function(newName) {
     if (newName === oldName) return;
     if (getAllCategories().includes(newName)) { showToast('该分类名称已存在'); return; }
-
-    const defaultSites = getEffectiveDefaultSites();
-    if (defaultSites.some(s => s.category === oldName)) {
-      defaultSites.filter(s => s.category === oldName).forEach(s => {
-        if (!editedDefaults[s.url]) editedDefaults[s.url] = {};
-        editedDefaults[s.url].category = newName;
-      });
-      localStorage.setItem('kai_edited_defaults', JSON.stringify(editedDefaults));
-    }
-
-    if (customSites.some(s => s.category === oldName)) {
-      customSites.forEach(s => { if (s.category === oldName) s.category = newName; });
-      localStorage.setItem('kai_custom_sites', JSON.stringify(customSites));
-    }
-
-    if (customCategories.includes(oldName)) {
-      customCategories[customCategories.indexOf(oldName)] = newName;
-      localStorage.setItem('kai_custom_categories', JSON.stringify(customCategories));
-    }
-
+    var ci = siteData.categories.indexOf(oldName);
+    if (ci !== -1) siteData.categories[ci] = newName;
+    siteData.sites.forEach(function(s) { if (s.category === oldName) s.category = newName; });
+    var co = siteData.categoryOrder || [];
+    var oi = co.indexOf(oldName);
+    if (oi !== -1) co[oi] = newName;
+    pushData();
     renderNav();
   };
   document.getElementById('catModalOverlay').classList.add('active');
-  setTimeout(() => { const inp = document.getElementById('catNameInput'); inp.focus(); inp.select(); }, 100);
+  setTimeout(function() { var inp = document.getElementById('catNameInput'); inp.focus(); inp.select(); }, 100);
 }
 
 function deleteCategory(catName) {
-  const defaultSites = getEffectiveDefaultSites();
-  const sitesInCat = [...defaultSites, ...customSites].filter(s => s.category === catName);
-  const msg = sitesInCat.length > 0
-    ? '分类「' + catName + '」下有 ' + sitesInCat.length + ' 个网站，删除分类将同时删除这些网站，确定？'
+  var count = siteData.sites.filter(function(s) { return s.category === catName; }).length;
+  var msg = count > 0
+    ? '分类「' + catName + '」下有 ' + count + ' 个网站，删除分类将同时删除这些网站，确定？'
     : '确定删除分类「' + catName + '」？';
-
   showConfirm('删除分类', msg, function(ok) {
     if (!ok) return;
-
-    defaultSites.filter(s => s.category === catName).forEach(s => {
-      if (!deletedDefaultUrls.includes(s.url)) deletedDefaultUrls.push(s.url);
-    });
-    localStorage.setItem('kai_deleted_defaults', JSON.stringify(deletedDefaultUrls));
-
-    customSites = customSites.filter(s => s.category !== catName);
-    localStorage.setItem('kai_custom_sites', JSON.stringify(customSites));
-
-    if (customCategories.includes(catName)) {
-      customCategories = customCategories.filter(c => c !== catName);
-      localStorage.setItem('kai_custom_categories', JSON.stringify(customCategories));
-    }
-
+    siteData.sites = siteData.sites.filter(function(s) { return s.category !== catName; });
+    siteData.categories = siteData.categories.filter(function(c) { return c !== catName; });
+    siteData.categoryOrder = (siteData.categoryOrder || []).filter(function(c) { return c !== catName; });
+    pushData();
     renderNav();
   });
 }
 
 function saveCatModal() {
-  const name = document.getElementById('catNameInput').value.trim();
+  var name = document.getElementById('catNameInput').value.trim();
   if (!name) return;
   if (catModalCallback) catModalCallback(name);
   closeCatModal();
@@ -1064,7 +1170,7 @@ function closeConfirm(result) {
 }
 
 function showToast(msg) {
-  let toast = document.getElementById('toast');
+  var toast = document.getElementById('toast');
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'toast';
@@ -1073,40 +1179,36 @@ function showToast(msg) {
   }
   toast.textContent = msg;
   toast.style.opacity = '1';
-  setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+  setTimeout(function() { toast.style.opacity = '0'; }, 2000);
 }
 
 function escapeHtml(str) {
-  const div = document.createElement('div');
+  var div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
 }
 
 function populateCategorySelect(selectedCat) {
-  const select = document.getElementById('siteCategory');
+  var select = document.getElementById('siteCategory');
   select.innerHTML = '';
-  getAllCategories().forEach(cat => {
-    const opt = document.createElement('option');
+  getAllCategories().forEach(function(cat) {
+    var opt = document.createElement('option');
     opt.value = cat;
     opt.textContent = cat;
-    if (cat === (selectedCat || '自定义')) opt.selected = true;
+    if (cat === (selectedCat || siteData.categories[0])) opt.selected = true;
     select.appendChild(opt);
   });
-  const newCatOpt = document.createElement('option');
+  var newCatOpt = document.createElement('option');
   newCatOpt.value = '__new__';
   newCatOpt.textContent = '➕ 新建分类...';
   select.appendChild(newCatOpt);
-
   select.onchange = function() {
-    if (this.value === '__new__') {
-      this.value = selectedCat || '自定义';
-      addCategory();
-    }
+    if (this.value === '__new__') { this.value = selectedCat || siteData.categories[0]; addCategory(); }
   };
 }
 
 function openModal(category) {
-  editingSiteKey = null;
+  editingSiteIdx = -1;
   document.querySelector('.modal h2').textContent = '添加网站';
   document.getElementById('siteUrl').value = '';
   document.getElementById('siteName').value = '';
@@ -1114,40 +1216,34 @@ function openModal(category) {
   document.getElementById('logoPreview').innerHTML = '<span>输入网址后自动获取</span>';
   document.getElementById('siteUrl').disabled = false;
   currentLogoUrl = '';
-
   populateCategorySelect(category);
-
   document.getElementById('modalOverlay').classList.add('active');
   document.getElementById('saveBtn').disabled = false;
   document.getElementById('saveBtn').textContent = '添加';
-  setTimeout(() => document.getElementById('siteUrl').focus(), 100);
+  setTimeout(function() { document.getElementById('siteUrl').focus(); }, 100);
 }
 
-function openEditModal(site, isCustom) {
-  editingSiteKey = isCustom ? getSiteKey(site) : site.url;
+function openEditModal(idx) {
+  editingSiteIdx = idx;
+  var site = siteData.sites[idx];
   document.querySelector('.modal h2').textContent = '编辑网站';
   document.getElementById('siteUrl').value = site.url;
   document.getElementById('siteUrl').disabled = true;
   document.getElementById('siteName').value = site.name;
   document.getElementById('siteDesc').value = site.desc || '';
   currentLogoUrl = site.favicon || getFaviconUrl(site.url);
-
   populateCategorySelect(site.category);
-
-  const preview = document.getElementById('logoPreview');
+  var preview = document.getElementById('logoPreview');
   if (currentLogoUrl) {
     preview.innerHTML = '';
-    const img = document.createElement('img');
+    var img = document.createElement('img');
     img.src = currentLogoUrl;
     img.alt = '图标';
     preview.appendChild(img);
-    const span = document.createElement('span');
+    var span = document.createElement('span');
     span.textContent = extractDomain(site.url) + ' 的图标';
     preview.appendChild(span);
-  } else {
-    preview.innerHTML = '<span>无图标</span>';
-  }
-
+  } else { preview.innerHTML = '<span>无图标</span>'; }
   document.getElementById('modalOverlay').classList.add('active');
   document.getElementById('saveBtn').disabled = false;
   document.getElementById('saveBtn').textContent = '保存';
@@ -1156,173 +1252,216 @@ function openEditModal(site, isCustom) {
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('active');
   document.getElementById('siteUrl').disabled = false;
-  editingSiteKey = null;
+  editingSiteIdx = -1;
 }
 
 function onUrlInput() {
   clearTimeout(urlDebounce);
-  const url = document.getElementById('siteUrl').value.trim();
-  if (!url) {
-    document.getElementById('logoPreview').innerHTML = '<span>输入网址后自动获取</span>';
-    currentLogoUrl = '';
-    return;
-  }
-
+  var url = document.getElementById('siteUrl').value.trim();
+  if (!url) { document.getElementById('logoPreview').innerHTML = '<span>输入网址后自动获取</span>'; currentLogoUrl = ''; return; }
   document.getElementById('logoPreview').innerHTML = '<span class="loading">正在获取图标...</span>';
-
-  urlDebounce = setTimeout(() => {
-    let normalized = url;
+  urlDebounce = setTimeout(function() {
+    var normalized = url;
     if (!/^https?:\/\//i.test(normalized)) normalized = 'https://' + normalized;
     document.getElementById('siteUrl').value = normalized;
-
-    const faviconUrl = getFaviconUrl(normalized);
+    var faviconUrl = getFaviconUrl(normalized);
     currentLogoUrl = faviconUrl;
-
-    const domain = extractDomain(normalized);
-    if (!document.getElementById('siteName').value) {
-      document.getElementById('siteName').value = domain;
-    }
-
-    const preview = document.getElementById('logoPreview');
+    var domain = extractDomain(normalized);
+    if (!document.getElementById('siteName').value) document.getElementById('siteName').value = domain;
+    var preview = document.getElementById('logoPreview');
     if (faviconUrl) {
       preview.innerHTML = '';
-      const img = document.createElement('img');
+      var img = document.createElement('img');
       img.src = faviconUrl;
       img.alt = '图标';
-      img.onerror = function() {
-        preview.innerHTML = '<span>图标获取失败，将使用默认图标</span>';
-        currentLogoUrl = '';
-      };
+      img.onerror = function() { preview.innerHTML = '<span>图标获取失败，将使用默认图标</span>'; currentLogoUrl = ''; };
       preview.appendChild(img);
-      const span = document.createElement('span');
+      var span = document.createElement('span');
       span.textContent = domain + ' 的图标';
       preview.appendChild(span);
-    } else {
-      preview.innerHTML = '<span>无法获取图标</span>';
-    }
+    } else { preview.innerHTML = '<span>无法获取图标</span>'; }
   }, 500);
 }
 
 function saveSite() {
-  const url = document.getElementById('siteUrl').value.trim();
-  const name = document.getElementById('siteName').value.trim();
-  const desc = document.getElementById('siteDesc').value.trim();
-  const category = document.getElementById('siteCategory').value;
-
+  var url = document.getElementById('siteUrl').value.trim();
+  var name = document.getElementById('siteName').value.trim();
+  var desc = document.getElementById('siteDesc').value.trim();
+  var category = document.getElementById('siteCategory').value;
   if (!url) { alert('请输入网站地址'); return; }
   if (!name) { alert('请输入网站名称'); return; }
 
-  if (editingSiteKey) {
-    const isCustomEdit = customSites.some(s => getSiteKey(s) === editingSiteKey);
-
-    if (isCustomEdit) {
-      const idx = customSites.findIndex(s => getSiteKey(s) === editingSiteKey);
-      if (idx !== -1) {
-        customSites[idx].name = name;
-        customSites[idx].desc = desc;
-        customSites[idx].category = category;
-        customSites[idx].favicon = currentLogoUrl || customSites[idx].favicon;
-      }
-      localStorage.setItem('kai_custom_sites', JSON.stringify(customSites));
-    } else {
-      editedDefaults[editingSiteKey] = {
-        name: name,
-        desc: desc,
-        category: category,
-        favicon: currentLogoUrl || undefined
-      };
-      localStorage.setItem('kai_edited_defaults', JSON.stringify(editedDefaults));
-    }
+  if (editingSiteIdx >= 0) {
+    siteData.sites[editingSiteIdx].name = name;
+    siteData.sites[editingSiteIdx].desc = desc;
+    siteData.sites[editingSiteIdx].category = category;
+    if (currentLogoUrl) siteData.sites[editingSiteIdx].favicon = currentLogoUrl;
   } else {
-    if (customSites.some(s => s.url === url)) {
-      alert('该网站已存在');
-      return;
-    }
-    customSites.push({
-      name: name,
-      url: url,
-      desc: desc || '',
-      category: category,
-      favicon: currentLogoUrl || ''
-    });
-    localStorage.setItem('kai_custom_sites', JSON.stringify(customSites));
+    if (siteData.sites.some(function(s) { return s.url === url; })) { alert('该网站已存在'); return; }
+    siteData.sites.push({ name: name, url: url, desc: desc || '', category: category, favicon: currentLogoUrl || '' });
   }
-
   closeModal();
+  pushData();
   renderNav();
 }
 
-function deleteSite(site, isCustom) {
+function deleteSite(idx) {
+  var site = siteData.sites[idx];
   showConfirm('删除网站', '确定删除「' + site.name + '」？', function(ok) {
     if (!ok) return;
-    if (isCustom) {
-      customSites = customSites.filter(s => !(s.url === site.url && s.name === site.name));
-      localStorage.setItem('kai_custom_sites', JSON.stringify(customSites));
-    } else {
-      deletedDefaultUrls.push(site.url);
-      localStorage.setItem('kai_deleted_defaults', JSON.stringify(deletedDefaultUrls));
-    }
+    siteData.sites.splice(idx, 1);
+    pushData();
     renderNav();
   });
 }
 
+function openPwdModal(title, label, callback) {
+  document.getElementById('pwdModalTitle').textContent = title;
+  document.getElementById('pwdLabel').textContent = label;
+  document.getElementById('pwdInput').value = '';
+  pwdCallback = callback;
+  document.getElementById('pwdModalOverlay').classList.add('active');
+  setTimeout(function() { document.getElementById('pwdInput').focus(); }, 100);
+}
+
+function closePwdModal() {
+  document.getElementById('pwdModalOverlay').classList.remove('active');
+  pwdCallback = null;
+}
+
+function submitPwd() {
+  var pwd = document.getElementById('pwdInput').value;
+  if (!pwd) return;
+  if (pwdCallback) pwdCallback(pwd);
+  closePwdModal();
+}
+
+function closeSetPwdModal() {
+  document.getElementById('setPwdOverlay').classList.remove('active');
+}
+
+function saveNewPwd() {
+  var newPwd = document.getElementById('newPwdInput').value;
+  var confirmPwd = document.getElementById('confirmPwdInput').value;
+  if (!newPwd) { showToast('请输入密码'); return; }
+  if (newPwd !== confirmPwd) { showToast('两次密码不一致'); return; }
+  editPasswordHash = simpleHash(newPwd);
+  localStorage.setItem('kai_edit_pwd', editPasswordHash);
+  closeSetPwdModal();
+  showToast('密码设置成功');
+}
+
+function openSetPwdModal() {
+  document.getElementById('newPwdInput').value = '';
+  document.getElementById('confirmPwdInput').value = '';
+  document.getElementById('setPwdOverlay').classList.add('active');
+  setTimeout(function() { document.getElementById('newPwdInput').focus(); }, 100);
+}
+
+function closeTokenModal() {
+  document.getElementById('tokenOverlay').classList.remove('active');
+}
+
+function openTokenModal() {
+  document.getElementById('adminTokenInput').value = adminToken;
+  document.getElementById('repoInfoInput').value = repoInfo;
+  document.getElementById('tokenOverlay').classList.add('active');
+}
+
+function saveTokenSettings() {
+  adminToken = document.getElementById('adminTokenInput').value.trim();
+  repoInfo = document.getElementById('repoInfoInput').value.trim();
+  localStorage.setItem('kai_admin_token', adminToken);
+  localStorage.setItem('kai_repo_info', repoInfo);
+  showToast('管理员配置已保存');
+  closeTokenModal();
+}
+
 document.getElementById('settingsBtn').addEventListener('click', function() {
-  isEditMode = !isEditMode;
-  document.body.classList.toggle('edit-mode', isEditMode);
-  this.textContent = isEditMode ? '✓' : '⚙️';
-  this.title = isEditMode ? '完成编辑' : '设置';
+  if (isEditMode) {
+    isEditMode = false;
+    document.body.classList.remove('edit-mode');
+    this.textContent = '⚙️';
+    this.title = '设置';
+    return;
+  }
+  if (editPasswordHash) {
+    openPwdModal('编辑验证', '请输入编辑密码', function(pwd) {
+      if (simpleHash(pwd) === editPasswordHash) {
+        isEditMode = true;
+        document.body.classList.add('edit-mode');
+        document.getElementById('settingsBtn').textContent = '✓';
+        document.getElementById('settingsBtn').title = '完成编辑';
+        renderNav();
+      } else showToast('密码错误');
+    });
+  } else {
+    isEditMode = true;
+    document.body.classList.add('edit-mode');
+    this.textContent = '✓';
+    this.title = '完成编辑';
+  }
 });
 
-document.getElementById('modalOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
-
-document.getElementById('catModalOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeCatModal();
-});
-
-document.getElementById('confirmOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeConfirm(false);
-});
+document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+document.getElementById('catModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeCatModal(); });
+document.getElementById('confirmOverlay').addEventListener('click', function(e) { if (e.target === this) closeConfirm(false); });
+document.getElementById('pwdModalOverlay').addEventListener('click', function(e) { if (e.target === this) closePwdModal(); });
+document.getElementById('setPwdOverlay').addEventListener('click', function(e) { if (e.target === this) closeSetPwdModal(); });
+document.getElementById('tokenOverlay').addEventListener('click', function(e) { if (e.target === this) closeTokenModal(); });
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') { closeModal(); closeCatModal(); closeConfirm(false); }
+  if (e.key === 'Escape') { closeModal(); closeCatModal(); closeConfirm(false); closePwdModal(); closeSetPwdModal(); closeTokenModal(); }
 });
 
-const engines = {
+var engines = {
   baidu:  { action: 'https://www.baidu.com/s',  param: 'wd' },
   google: { action: 'https://www.google.com/search', param: 'q' },
   bing:   { action: 'https://www.bing.com/search',  param: 'q' }
 };
 
-let currentEngine = 'baidu';
+var currentEngine = 'baidu';
 
 function switchEngine(engine) {
   currentEngine = engine;
-  const form = document.getElementById('searchForm');
+  var form = document.getElementById('searchForm');
   form.action = engines[engine].action;
-  const input = document.getElementById('searchInput');
+  var input = document.getElementById('searchInput');
   input.name = engines[engine].param;
-  const placeholders = { baidu: '搜索你想要的内容...', google: 'Search with Google...', bing: 'Search with Bing...' };
+  var placeholders = { baidu: '搜索你想要的内容...', google: 'Search with Google...', bing: 'Search with Bing...' };
   input.placeholder = placeholders[engine];
 }
 
 function updateClock() {
-  const now = new Date();
-  const h = String(now.getHours()).padStart(2, '0');
-  const m = String(now.getMinutes()).padStart(2, '0');
+  var now = new Date();
+  var h = String(now.getHours()).padStart(2, '0');
+  var m = String(now.getMinutes()).padStart(2, '0');
   document.getElementById('clock').textContent = h + ':' + m;
-
-  const weekdays = ['日','一','二','三','四','五','六'];
-  const dateStr = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 星期' + weekdays[now.getDay()];
-  document.getElementById('dateStr').textContent = dateStr;
+  var weekdays = ['日','一','二','三','四','五','六'];
+  document.getElementById('dateStr').textContent = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 星期' + weekdays[now.getDay()];
 }
 
 updateClock();
 setInterval(updateClock, 1000);
 
-renderNav();
-document.getElementById('searchInput').focus();
+fetch('data.json')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    siteData = data;
+    if (adminToken && repoInfo) {
+      fetch('https://api.github.com/repos/' + repoInfo + '/contents/data.json', {
+        headers: { 'Authorization': 'token ' + adminToken, 'Accept': 'application/vnd.github.v3+json' }
+      }).then(function(r) { return r.json(); }).then(function(res) {
+        if (res.sha) dataSha = res.sha;
+        renderNav();
+        document.getElementById('searchInput').focus();
+      }).catch(function() { renderNav(); document.getElementById('searchInput').focus(); });
+    } else {
+      renderNav();
+      document.getElementById('searchInput').focus();
+    }
+  })
+  .catch(function() { renderNav(); document.getElementById('searchInput').focus(); });
 </script>
 
 </body>

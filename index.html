@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -674,6 +674,7 @@ footer {
 
 <button class="settings-btn" id="settingsBtn" title="设置">⚙️</button>
 <button class="settings-btn" id="adminBtn" title="管理员配置" style="right:76px;font-size:16px;display:none;">🔑</button>
+<button class="settings-btn" id="calcBtn" title="计算器" style="right:128px;">🧮</button>
 
 <div class="container">
   <header>
@@ -806,6 +807,15 @@ footer {
       <button class="btn-save" style="width:100%;height:44px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;background:linear-gradient(135deg,#10B981,#059669);color:white;" onclick="$('otaFileInput').click()">📁 选择文件升级</button>
       <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted-fg);">当前版本: <span id="otaCurVer"></span> <span id="otaNewVer"></span></div>
     </div>
+  </div>
+</div>
+
+<!-- Calculator Modal -->
+<div class="modal-overlay" id="calcOverlay">
+  <div class="modal" style="max-width:320px;padding:24px;">
+    <h2>🧮 计算器</h2>
+    <input type="text" id="calcDisplay" readonly style="width:100%;height:56px;font-size:28px;text-align:right;padding:0 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--muted);color:var(--fg);font-family:inherit;margin-bottom:16px;outline:none;">
+    <div id="calcGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
   </div>
 </div>
 
@@ -1078,6 +1088,36 @@ function updateClock() {
   $('dateStr').textContent = n.getFullYear() + '年' + (n.getMonth()+1) + '月' + n.getDate() + '日 星期' + w[n.getDay()];
 }
 updateClock(); setInterval(updateClock, 1000);
+
+(function() {
+  var expr = '', disp = $('calcDisplay'), grid = $('calcGrid');
+  var btns = ['C','±','%','÷','7','8','9','×','4','5','6','-','1','2','3','+','0','.','⌫','='];
+  btns.forEach(function(t) {
+    var b = document.createElement('button');
+    b.textContent = t;
+    b.style.cssText = 'height:48px;border-radius:10px;border:none;font-size:18px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;';
+    if ('0123456789.'.indexOf(t) > -1) b.style.cssText += 'background:var(--card);color:var(--fg);';
+    else if (t === '=') b.style.cssText += 'background:linear-gradient(135deg,var(--accent),var(--accent-2));color:white;';
+    else b.style.cssText += 'background:var(--muted);color:var(--muted-fg);';
+    b.onmouseenter = function() { this.style.opacity = '0.7'; };
+    b.onmouseleave = function() { this.style.opacity = '1'; };
+    b.onclick = function() {
+      if (t === 'C') { expr = ''; }
+      else if (t === '⌫') { expr = expr.slice(0, -1); }
+      else if (t === '±') { if (expr && expr[0] === '-') expr = expr.slice(1); else if (expr) expr = '-' + expr; }
+      else if (t === '%') { try { expr = String(parseFloat(expr) / 100); } catch(e) {} }
+      else if (t === '=') {
+        try { var e = expr.replace(/×/g,'*').replace(/÷/g,'/'); expr = String(Function('"use strict";return(' + e + ')')()); if (expr === 'Infinity' || expr === 'NaN') expr = 'Error'; } catch(e) { expr = 'Error'; }
+      }
+      else { if (expr === 'Error') expr = ''; expr += t; }
+      disp.value = expr || '0';
+    };
+    grid.appendChild(b);
+  });
+  $('calcBtn').addEventListener('click', function() { $('calcOverlay').classList.add('active'); disp.value = expr || '0'; });
+  $('calcOverlay').addEventListener('click', function(e) { if (e.target === this) $('calcOverlay').classList.remove('active'); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && $('calcOverlay').classList.contains('active')) $('calcOverlay').classList.remove('active'); });
+})();
 
 var fallback = {"categories":["常用工具","开发资源","社交媒体","学习教育","效率工具","自定义"],"categoryOrder":[],"sites":[{"name":"百度","url":"https://www.baidu.com","desc":"搜索引擎","category":"常用工具","emoji":"🔍","emojiBg":"#F1F5F9","emojiColor":"#0052FF"},{"name":"Google 翻译","url":"https://translate.google.com","desc":"多语言翻译","category":"常用工具","emoji":"🌐","emojiBg":"#EEF2FF","emojiColor":"#4F46E5"},{"name":"Notion","url":"https://www.notion.so","desc":"笔记与协作","category":"常用工具","emoji":"📝","emojiBg":"#F0FDF4","emojiColor":"#16A34A"},{"name":"ChatGPT","url":"https://chat.openai.com","desc":"AI 对话助手","category":"常用工具","emoji":"🤖","emojiBg":"#F0F9FF","emojiColor":"#0284C7"},{"name":"Canva","url":"https://www.canva.cn","desc":"在线设计","category":"常用工具","emoji":"🎨","emojiBg":"#FFF7ED","emojiColor":"#EA580C"},{"name":"GitHub","url":"https://github.com","desc":"代码托管","category":"开发资源","emoji":"🐙","emojiBg":"#F1F5F9","emojiColor":"#0F172A"},{"name":"StackOverflow","url":"https://stackoverflow.com","desc":"技术问答","category":"开发资源","emoji":"📚","emojiBg":"#FFF7ED","emojiColor":"#F59E0B"},{"name":"MDN","url":"https://developer.mozilla.org","desc":"Web 开发文档","category":"开发资源","emoji":"📖","emojiBg":"#EEF2FF","emojiColor":"#4F46E5"},{"name":"CodePen","url":"https://codepen.io","desc":"在线代码编辑","category":"开发资源","emoji":"✏️","emojiBg":"#F0FDF4","emojiColor":"#16A34A"},{"name":"npm","url":"https://www.npmjs.com","desc":"包管理器","category":"开发资源","emoji":"📦","emojiBg":"#F1F5F9","emojiColor":"#CB3837"},{"name":"微博","url":"https://weibo.com","desc":"社交平台","category":"社交媒体","emoji":"📢","emojiBg":"#FFF1F2","emojiColor":"#E11D48"},{"name":"知乎","url":"https://www.zhihu.com","desc":"知识社区","category":"社交媒体","emoji":"💡","emojiBg":"#EEF2FF","emojiColor":"#0066FF"},{"name":"哔哩哔哩","url":"https://www.bilibili.com","desc":"视频社区","category":"社交媒体","emoji":"🎬","emojiBg":"#F0F9FF","emojiColor":"#00A1D6"},{"name":"Twitter","url":"https://twitter.com","desc":"全球社交","category":"社交媒体","emoji":"🐦","emojiBg":"#F0F9FF","emojiColor":"#1D9BF0"},{"name":"YouTube","url":"https://www.youtube.com","desc":"全球视频","category":"社交媒体","emoji":"▶️","emojiBg":"#FFF7ED","emojiColor":"#FF0000"},{"name":"Coursera","url":"https://www.coursera.org","desc":"在线课程","category":"学习教育","emoji":"🎓","emojiBg":"#EEF2FF","emojiColor":"#0056D2"},{"name":"中国大学MOOC","url":"https://www.icourse163.org","desc":"国内课程","category":"学习教育","emoji":"🏫","emojiBg":"#F0FDF4","emojiColor":"#C41230"},{"name":"力扣","url":"https://leetcode.cn","desc":"算法练习","category":"学习教育","emoji":"🧩","emojiBg":"#FFF7ED","emojiColor":"#FFA116"},{"name":"W3Schools","url":"https://www.w3schools.com","desc":"Web 教程","category":"学习教育","emoji":"💻","emojiBg":"#F0FDF4","emojiColor":"#04AA6D"},{"name":"Gmail","url":"https://mail.google.com","desc":"邮件服务","category":"效率工具","emoji":"✉️","emojiBg":"#FFF7ED","emojiColor":"#EA4335"},{"name":"Google Drive","url":"https://drive.google.com","desc":"云存储","category":"效率工具","emoji":"📁","emojiBg":"#EEF2FF","emojiColor":"#4285F4"},{"name":"Figma","url":"https://www.figma.com","desc":"设计协作","category":"效率工具","emoji":"🎯","emojiBg":"#FFF1F2","emojiColor":"#A259FF"},{"name":"Excalidraw","url":"https://excalidraw.com","desc":"手绘白板","category":"效率工具","emoji":"✍️","emojiBg":"#F0FDF4","emojiColor":"#6965DB"}]};
 

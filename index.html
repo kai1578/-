@@ -104,11 +104,6 @@ header h1 {
   color: var(--fg);
 }
 
-header .subtitle {
-  color: var(--muted-fg);
-  font-size: 14px;
-  margin-top: 4px;
-}
 
 /* ===== Settings Button ===== */
 .settings-btn {
@@ -350,8 +345,8 @@ body.edit-mode .add-category-btn {
 }
 
 .nav-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -368,6 +363,9 @@ body.edit-mode .add-category-btn {
   transition: all 0.25s ease-out;
   box-shadow: var(--shadow-sm);
   position: relative;
+  width: auto;
+  min-width: 150px;
+  flex: 0 0 auto;
 }
 
 .nav-card:hover {
@@ -406,16 +404,12 @@ body.edit-mode .add-category-btn {
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .nav-card .info .desc {
   font-size: 11px;
   color: var(--muted-fg);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   margin-top: 1px;
 }
 
@@ -660,8 +654,7 @@ footer {
   header { padding-top: 32px; }
   header h1 { font-size: 22px; }
   .time-bar .time { font-size: 36px; }
-  .nav-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
-  .nav-card { padding: 10px 12px; }
+  .nav-card { padding: 10px 12px; min-width: 120px; }
   .nav-card .icon { width: 32px; height: 32px; font-size: 16px; }
   .nav-card .icon img { width: 20px; height: 20px; }
   .search-box button { padding: 0 18px; }
@@ -793,11 +786,7 @@ footer {
       <label>仓库信息</label>
       <input type="text" id="repoInfoInput" placeholder="用户名/仓库名，如 kai1578/-">
     </div>
-    <div class="form-group" id="adminOtaGroup" style="display:none;">
-      <label>OTA 升级源</label>
-      <input type="text" id="otaUrlInput" placeholder="https://example.com/nav/index.html">
-      <div style="font-size:12px;color:var(--muted-fg);margin-top:6px;">填入最新版 index.html 的远程地址</div>
-    </div>
+
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeAdminModal()">取消</button>
       <button class="btn-save" id="adminSaveBtn" onclick="adminModalAction()">确定</button>

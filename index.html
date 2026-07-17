@@ -768,706 +768,335 @@ footer {
   </div>
 </div>
 
-<!-- Password Modal -->
-<div class="modal-overlay" id="pwdModalOverlay">
-  <div class="modal" style="max-width:380px;">
-    <h2 id="pwdModalTitle">输入密码</h2>
-    <div class="form-group">
-      <label id="pwdLabel">请输入编辑密码</label>
-      <input type="password" id="pwdInput" placeholder="请输入密码" onkeydown="if(event.key==='Enter')submitPwd()">
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closePwdModal()">取消</button>
-      <button class="btn-save" onclick="submitPwd()">确定</button>
-    </div>
-  </div>
-</div>
-
-<!-- Set Password Modal -->
-<div class="modal-overlay" id="setPwdOverlay">
-  <div class="modal" style="max-width:380px;">
-    <h2>设置编辑密码</h2>
-    <div class="form-group">
-      <label>新密码</label>
-      <input type="password" id="newPwdInput" placeholder="请输入新密码">
-    </div>
-    <div class="form-group">
-      <label>确认密码</label>
-      <input type="password" id="confirmPwdInput" placeholder="请再次输入密码" onkeydown="if(event.key==='Enter')saveNewPwd()">
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeSetPwdModal()">取消</button>
-      <button class="btn-save" onclick="saveNewPwd()">确定</button>
-    </div>
-  </div>
-</div>
-
-<!-- Admin Token Modal -->
-<div class="modal-overlay" id="tokenOverlay">
+<!-- Admin Modal -->
+<div class="modal-overlay" id="adminOverlay">
   <div class="modal" style="max-width:460px;">
-    <h2>🔑 管理员配置</h2>
-    <div class="form-group">
+    <h2 id="adminModalTitle">🔑 管理员配置</h2>
+    <div class="form-group" id="adminPwdGroup" style="display:none;">
       <label>管理员密码</label>
-      <input type="password" id="adminPwdInput" placeholder="设置管理员密码">
+      <input type="password" id="adminPwdInput" placeholder="输入管理员密码">
+    </div>
+    <div class="form-group" id="adminNewPwdGroup" style="display:none;">
+      <label>新密码</label>
+      <input type="password" id="adminNewPwdInput" placeholder="设置管理员密码">
       <div style="font-size:12px;color:var(--muted-fg);margin-top:6px;">进入编辑模式需要此密码</div>
     </div>
-    <div class="form-group">
+    <div class="form-group" id="adminTokenGroup" style="display:none;">
       <label>GitHub Token</label>
       <input type="password" id="adminTokenInput" placeholder="ghp_xxxxxxxxxxxx">
       <div style="font-size:12px;color:var(--muted-fg);margin-top:6px;line-height:1.5;">
         前往 <a href="https://github.com/settings/tokens/new" target="_blank" style="color:var(--accent);">GitHub 创建 Token</a>，勾选 <b>repo</b> 权限
       </div>
     </div>
-    <div class="form-group">
+    <div class="form-group" id="adminRepoGroup" style="display:none;">
       <label>仓库信息</label>
       <input type="text" id="repoInfoInput" placeholder="用户名/仓库名，如 kai1578/-">
     </div>
+    <div class="form-group" id="adminOtaGroup" style="display:none;">
+      <label>OTA 升级源</label>
+      <input type="text" id="otaUrlInput" placeholder="https://example.com/nav/index.html">
+      <div style="font-size:12px;color:var(--muted-fg);margin-top:6px;">填入最新版 index.html 的远程地址</div>
+    </div>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeTokenModal()">取消</button>
-      <button class="btn-save" onclick="saveTokenSettings()">保存</button>
+      <button class="btn-cancel" onclick="closeAdminModal()">取消</button>
+      <button class="btn-save" id="adminSaveBtn" onclick="adminModalAction()">确定</button>
+    </div>
+    <div id="otaUpgradeGroup" style="display:none;margin-top:16px;">
+      <input type="file" id="otaFileInput" accept=".html" style="display:none;" onchange="onOtaFileSelect(this)">
+      <button class="btn-save" style="width:100%;height:44px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;background:linear-gradient(135deg,#10B981,#059669);color:white;" onclick="$('otaFileInput').click()">📁 选择文件升级</button>
+      <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted-fg);">当前版本: <span id="otaCurVer"></span> <span id="otaNewVer"></span></div>
     </div>
   </div>
 </div>
 
 <script>
-var siteData = { categories: [], sites: [], categoryOrder: [] };
-var isEditMode = false;
-var currentLogoUrl = '';
-var urlDebounce = null;
-var editingSiteIdx = -1;
+var D = { categories: [], sites: [], categoryOrder: [] };
+var edit = false, logoUrl = '', urlTimer = null, editIdx = -1;
+var token = localStorage.getItem('kai_token') || '';
+var repo = localStorage.getItem('kai_repo') || '';
+var sha = '', pushTimer = null;
+var pwdHash = localStorage.getItem('kai_pwd') || '';
+var adminMode = '';
+var VER = '1.0.0';
 
-var adminToken = localStorage.getItem('kai_admin_token') || '';
-var repoInfo = localStorage.getItem('kai_repo_info') || '';
-var dataSha = '';
-var syncDebounce = null;
-var editPasswordHash = localStorage.getItem('kai_edit_pwd') || '';
 
-function simpleHash(str) {
-  var h = 0;
-  for (var i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
-  return 'h_' + Math.abs(h).toString(36);
-}
+function hash(s) { var h = 0; for (var i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0; return 'h' + Math.abs(h).toString(36); }
+function $(id) { return document.getElementById(id); }
+function favicon(u) { try { return 'https://www.google.com/s2/favicons?domain=' + new URL(u).hostname + '&sz=64'; } catch { return ''; } }
+function domain(u) { try { return new URL(u).hostname; } catch { return ''; } }
+function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-function getAllCategories() {
-  return siteData.categories || [];
-}
-
-function getFaviconUrl(url) {
-  try { return 'https://www.google.com/s2/favicons?domain=' + new URL(url).hostname + '&sz=64'; } catch { return ''; }
-}
-
-function extractDomain(url) {
-  try { return new URL(url).hostname; } catch { return ''; }
-}
-
-function pushData() {
-  if (!adminToken || !repoInfo) return;
-  clearTimeout(syncDebounce);
-  syncDebounce = setTimeout(function() {
-    var content = JSON.stringify(siteData, null, 2);
-    var body = { message: '更新导航数据', content: btoa(unescape(encodeURIComponent(content))), sha: dataSha };
-    fetch('https://api.github.com/repos/' + repoInfo + '/contents/data.json', {
+function push() {
+  if (!token || !repo) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(function() {
+    fetch('https://api.github.com/repos/' + repo + '/contents/data.json', {
       method: 'PUT',
-      headers: { 'Authorization': 'token ' + adminToken, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    }).then(function(r) { return r.json(); }).then(function(res) {
-      if (res.content && res.content.sha) dataSha = res.content.sha;
-      else if (res.message) console.warn('推送失败:', res.message);
-    });
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: '更新导航', content: btoa(unescape(encodeURIComponent(JSON.stringify(D, null, 2)))), sha: sha })
+    }).then(function(r) { return r.json(); }).then(function(r) { if (r.content && r.content.sha) sha = r.content.sha; });
   }, 2000);
 }
 
-function renderNav() {
-  var container = document.getElementById('navSections');
-  container.innerHTML = '';
-  var categories = getAllCategories();
-  var categoryOrder = siteData.categoryOrder || [];
-  var usedCats = [];
-  siteData.sites.forEach(function(s) { if (categories.indexOf(s.category) !== -1 && usedCats.indexOf(s.category) === -1) usedCats.push(s.category); });
+function render() {
+  var c = $('navSections'); c.innerHTML = '';
+  var cats = D.categories || [], co = D.categoryOrder || [];
+  var used = [];
+  D.sites.forEach(function(s) { if (cats.indexOf(s.category) !== -1 && used.indexOf(s.category) === -1) used.push(s.category); });
+  used.sort(function(a, b) { var ai = co.indexOf(a), bi = co.indexOf(b); if (ai < 0 && bi < 0) return 0; if (ai < 0) return 1; if (bi < 0) return -1; return ai - bi; });
 
-  usedCats.sort(function(a, b) {
-    var ai = categoryOrder.indexOf(a), bi = categoryOrder.indexOf(b);
-    if (ai === -1 && bi === -1) return 0;
-    if (ai === -1) return 1;
-    if (bi === -1) return -1;
-    return ai - bi;
-  });
+  used.forEach(function(cat) {
+    var sites = D.sites.filter(function(s) { return s.category === cat; });
+    var g = document.createElement('div'); g.className = 'nav-group';
+    var t = document.createElement('div'); t.className = 'nav-group-title';
+    t.appendChild(document.createTextNode(cat));
 
-  usedCats.forEach(function(cat) {
-    var sites = siteData.sites.filter(function(s) { return s.category === cat; });
-    var group = document.createElement('div');
-    group.className = 'nav-group';
+    var acts = document.createElement('div'); acts.className = 'cat-actions';
+    [['↑','上移',function(e){e.stopPropagation();moveCat(cat,-1);}],
+     ['↓','下移',function(e){e.stopPropagation();moveCat(cat,1);}],
+     ['✎','重命名',function(e){e.stopPropagation();renameCat(cat);}],
+     ['×','删除',function(e){e.stopPropagation();delCat(cat);}]].forEach(function(b) {
+      var btn = document.createElement('button'); btn.className = b[2].toString().indexOf('delCat') > -1 ? 'cat-del-btn' : 'cat-edit-btn';
+      btn.textContent = b[0]; btn.title = b[1]; btn.onclick = b[2]; acts.appendChild(btn);
+    });
+    t.appendChild(acts); g.appendChild(t);
 
-    var title = document.createElement('div');
-    title.className = 'nav-group-title';
-    title.appendChild(document.createTextNode(cat));
-
-    var catActions = document.createElement('div');
-    catActions.className = 'cat-actions';
-
-    var catUpBtn = document.createElement('button');
-    catUpBtn.className = 'cat-edit-btn';
-    catUpBtn.textContent = '↑';
-    catUpBtn.title = '上移分类';
-    catUpBtn.onclick = function(e) { e.stopPropagation(); moveCategory(cat, -1); };
-    catActions.appendChild(catUpBtn);
-
-    var catDownBtn = document.createElement('button');
-    catDownBtn.className = 'cat-edit-btn';
-    catDownBtn.textContent = '↓';
-    catDownBtn.title = '下移分类';
-    catDownBtn.onclick = function(e) { e.stopPropagation(); moveCategory(cat, 1); };
-    catActions.appendChild(catDownBtn);
-
-    var catEditBtn = document.createElement('button');
-    catEditBtn.className = 'cat-edit-btn';
-    catEditBtn.textContent = '✎';
-    catEditBtn.title = '重命名分类';
-    catEditBtn.onclick = function(e) { e.stopPropagation(); renameCategory(cat); };
-    catActions.appendChild(catEditBtn);
-
-    var catDelBtn = document.createElement('button');
-    catDelBtn.className = 'cat-del-btn';
-    catDelBtn.textContent = '×';
-    catDelBtn.title = '删除分类';
-    catDelBtn.onclick = function(e) { e.stopPropagation(); deleteCategory(cat); };
-    catActions.appendChild(catDelBtn);
-
-    title.appendChild(catActions);
-    group.appendChild(title);
-
-    var grid = document.createElement('div');
-    grid.className = 'nav-grid';
-
+    var grid = document.createElement('div'); grid.className = 'nav-grid';
     sites.forEach(function(site) {
-      var idx = siteData.sites.indexOf(site);
-      var card = document.createElement('a');
-      card.className = 'nav-card';
-      card.href = site.url;
-      card.target = '_blank';
-      card.draggable = false;
-      card.onclick = function(e) { if (isEditMode) { e.preventDefault(); openEditModal(idx); } };
+      var idx = D.sites.indexOf(site);
+      var card = document.createElement('a'); card.className = 'nav-card'; card.href = site.url; card.target = '_blank'; card.draggable = false;
+      card.onclick = function(e) { if (edit) { e.preventDefault(); editSite(idx); } };
 
-      var iconDiv = document.createElement('div');
-      iconDiv.className = 'icon';
+      var icon = document.createElement('div'); icon.className = 'icon';
       if (site.favicon) {
-        iconDiv.style.background = '#F1F5F9';
-        var img = document.createElement('img');
-        img.src = site.favicon;
-        img.alt = site.name;
-        img.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px;">🔗</span>'; };
-        iconDiv.appendChild(img);
-      } else {
-        iconDiv.style.background = site.emojiBg || '#F1F5F9';
-        iconDiv.style.color = site.emojiColor || '#0052FF';
-        iconDiv.textContent = site.emoji || '🔗';
-      }
-      card.appendChild(iconDiv);
+        icon.style.background = '#F1F5F9';
+        var img = document.createElement('img'); img.src = site.favicon; img.alt = site.name;
+        img.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; };
+        icon.appendChild(img);
+      } else { icon.style.background = site.emojiBg || '#F1F5F9'; icon.style.color = site.emojiColor || '#0052FF'; icon.textContent = site.emoji || '🔗'; }
+      card.appendChild(icon);
 
-      var infoDiv = document.createElement('div');
-      infoDiv.className = 'info';
-      infoDiv.innerHTML = '<div class="name">' + escapeHtml(site.name) + '</div><div class="desc">' + escapeHtml(site.desc || '') + '</div>';
-      card.appendChild(infoDiv);
+      var info = document.createElement('div'); info.className = 'info';
+      info.innerHTML = '<div class="name">' + esc(site.name) + '</div><div class="desc">' + esc(site.desc || '') + '</div>';
+      card.appendChild(info);
 
-      var actionsDiv = document.createElement('div');
-      actionsDiv.className = 'card-actions';
-
-      var editBtn = document.createElement('button');
-      editBtn.className = 'edit-btn';
-      editBtn.textContent = '✎';
-      editBtn.title = '编辑';
-      editBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); openEditModal(idx); };
-      actionsDiv.appendChild(editBtn);
-
-      var delBtn = document.createElement('button');
-      delBtn.className = 'delete-btn';
-      delBtn.textContent = '×';
-      delBtn.title = '删除';
-      delBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); deleteSite(idx); };
-      actionsDiv.appendChild(delBtn);
-
-      card.appendChild(actionsDiv);
-      grid.appendChild(card);
+      var acts2 = document.createElement('div'); acts2.className = 'card-actions';
+      [['✎','edit-btn','编辑',function(e){e.preventDefault();e.stopPropagation();editSite(idx);}],
+       ['×','delete-btn','删除',function(e){e.preventDefault();e.stopPropagation();delSite(idx);}]].forEach(function(b) {
+        var btn = document.createElement('button'); btn.className = b[1]; btn.textContent = b[0]; btn.title = b[2]; btn.onclick = b[3]; acts2.appendChild(btn);
+      });
+      card.appendChild(acts2); grid.appendChild(card);
     });
 
-    var addBtn = document.createElement('button');
-    addBtn.className = 'add-card';
-    addBtn.textContent = '+ 添加网站';
-    addBtn.onclick = function() { openModal(cat); };
-    grid.appendChild(addBtn);
-
-    group.appendChild(grid);
-    container.appendChild(group);
+    var add = document.createElement('button'); add.className = 'add-card'; add.textContent = '+ 添加网站'; add.onclick = function() { addSite(cat); };
+    grid.appendChild(add); g.appendChild(grid); c.appendChild(g);
   });
 
-  var addCatBtn = document.createElement('button');
-  addCatBtn.className = 'add-category-btn';
-  addCatBtn.textContent = '+ 新建分类';
-  addCatBtn.onclick = function() { addCategory(); };
-  container.appendChild(addCatBtn);
-
-  if (isEditMode) {
-    var pwdBtn = document.createElement('button');
-    pwdBtn.className = 'add-category-btn';
-    pwdBtn.textContent = editPasswordHash ? '🔒 修改编辑密码' : '🔓 设置编辑密码';
-    pwdBtn.onclick = function() {
-      if (editPasswordHash) {
-        openPwdModal('验证身份', '请输入当前编辑密码', function(pwd) {
-          if (simpleHash(pwd) === editPasswordHash) openSetPwdModal();
-          else showToast('密码错误');
-        });
-      } else openSetPwdModal();
-    };
-    container.appendChild(pwdBtn);
-
-    var tokenBtn = document.createElement('button');
-    tokenBtn.className = 'add-category-btn';
-    tokenBtn.textContent = adminToken ? '🔑 管理员配置' : '🔑 配置管理员';
-    tokenBtn.onclick = function() { openTokenModal(); };
-    container.appendChild(tokenBtn);
-  }
-
+  var ac = document.createElement('button'); ac.className = 'add-category-btn'; ac.textContent = '+ 新建分类'; ac.onclick = addCat; c.appendChild(ac);
+  if (edit) { var ab = document.createElement('button'); ab.className = 'add-category-btn'; ab.textContent = '🔑 管理员配置'; ab.onclick = function() { openAdmin('config'); }; c.appendChild(ab); }
 }
 
-var catModalCallback = null;
-var confirmCallback = null;
-var pwdCallback = null;
+var catCb = null, cfCb = null;
 
-function moveCategory(catName, direction) {
-  var co = siteData.categoryOrder || [];
-  if (co.length === 0) {
-    var allCats = getAllCategories();
-    allCats.forEach(function(c) { if (co.indexOf(c) === -1) co.push(c); });
-    siteData.categoryOrder = co;
-  }
-  var idx = co.indexOf(catName);
-  if (idx === -1) return;
-  var newIdx = idx + direction;
-  if (newIdx < 0 || newIdx >= co.length) return;
-  co.splice(idx, 1);
-  co.splice(newIdx, 0, catName);
-  siteData.categoryOrder = co;
-  pushData();
-  renderNav();
+function moveCat(name, dir) {
+  var co = D.categoryOrder || [];
+  if (!co.length) { D.categories.forEach(function(c) { if (co.indexOf(c) === -1) co.push(c); }); D.categoryOrder = co; }
+  var i = co.indexOf(name); if (i < 0) return; var ni = i + dir; if (ni < 0 || ni >= co.length) return;
+  co.splice(i, 1); co.splice(ni, 0, name); push(); render();
 }
 
-function addCategory() {
-  document.getElementById('catModalTitle').textContent = '新建分类';
-  document.getElementById('catNameInput').value = '';
-  document.getElementById('catNameInput').placeholder = '请输入分类名称';
-  catModalCallback = function(name) {
-    if (getAllCategories().includes(name)) { showToast('该分类已存在'); return; }
-    siteData.categories.push(name);
-    pushData();
-    renderNav();
+function addCat() {
+  $('catModalTitle').textContent = '新建分类'; $('catNameInput').value = ''; $('catNameInput').placeholder = '请输入分类名称';
+  catCb = function(n) { if (D.categories.includes(n)) { toast('该分类已存在'); return; } D.categories.push(n); push(); render(); };
+  $('catModalOverlay').classList.add('active'); setTimeout(function() { $('catNameInput').focus(); }, 100);
+}
+
+function renameCat(old) {
+  $('catModalTitle').textContent = '重命名分类'; $('catNameInput').value = old; $('catNameInput').placeholder = '请输入新的分类名称';
+  catCb = function(n) { if (n === old) return; if (D.categories.includes(n)) { toast('该分类已存在'); return; }
+    var i = D.categories.indexOf(old); if (i !== -1) D.categories[i] = n;
+    D.sites.forEach(function(s) { if (s.category === old) s.category = n; });
+    var co = D.categoryOrder || [], oi = co.indexOf(old); if (oi !== -1) co[oi] = n;
+    push(); render();
   };
-  document.getElementById('catModalOverlay').classList.add('active');
-  setTimeout(function() { document.getElementById('catNameInput').focus(); }, 100);
+  $('catModalOverlay').classList.add('active'); setTimeout(function() { var inp = $('catNameInput'); inp.focus(); inp.select(); }, 100);
 }
 
-function renameCategory(oldName) {
-  document.getElementById('catModalTitle').textContent = '重命名分类';
-  document.getElementById('catNameInput').value = oldName;
-  document.getElementById('catNameInput').placeholder = '请输入新的分类名称';
-  catModalCallback = function(newName) {
-    if (newName === oldName) return;
-    if (getAllCategories().includes(newName)) { showToast('该分类名称已存在'); return; }
-    var ci = siteData.categories.indexOf(oldName);
-    if (ci !== -1) siteData.categories[ci] = newName;
-    siteData.sites.forEach(function(s) { if (s.category === oldName) s.category = newName; });
-    var co = siteData.categoryOrder || [];
-    var oi = co.indexOf(oldName);
-    if (oi !== -1) co[oi] = newName;
-    pushData();
-    renderNav();
-  };
-  document.getElementById('catModalOverlay').classList.add('active');
-  setTimeout(function() { var inp = document.getElementById('catNameInput'); inp.focus(); inp.select(); }, 100);
-}
-
-function deleteCategory(catName) {
-  var count = siteData.sites.filter(function(s) { return s.category === catName; }).length;
-  var msg = count > 0
-    ? '分类「' + catName + '」下有 ' + count + ' 个网站，删除分类将同时删除这些网站，确定？'
-    : '确定删除分类「' + catName + '」？';
-  showConfirm('删除分类', msg, function(ok) {
-    if (!ok) return;
-    siteData.sites = siteData.sites.filter(function(s) { return s.category !== catName; });
-    siteData.categories = siteData.categories.filter(function(c) { return c !== catName; });
-    siteData.categoryOrder = (siteData.categoryOrder || []).filter(function(c) { return c !== catName; });
-    pushData();
-    renderNav();
+function delCat(name) {
+  var cnt = D.sites.filter(function(s) { return s.category === name; }).length;
+  confirm('删除分类', cnt ? '分类「' + name + '」下有 ' + cnt + ' 个网站，确定删除？' : '确定删除分类「' + name + '」？', function(ok) {
+    if (!ok) return; D.sites = D.sites.filter(function(s) { return s.category !== name; });
+    D.categories = D.categories.filter(function(c) { return c !== name; });
+    D.categoryOrder = (D.categoryOrder || []).filter(function(c) { return c !== name; }); push(); render();
   });
 }
 
-function saveCatModal() {
-  var name = document.getElementById('catNameInput').value.trim();
-  if (!name) return;
-  if (catModalCallback) catModalCallback(name);
-  closeCatModal();
+function saveCatModal() { var n = $('catNameInput').value.trim(); if (!n) return; if (catCb) catCb(n); closeCatModal(); }
+function closeCatModal() { $('catModalOverlay').classList.remove('active'); catCb = null; }
+
+function confirm(title, msg, cb) { $('confirmTitle').textContent = title; $('confirmMsg').textContent = msg; cfCb = cb; $('confirmOverlay').classList.add('active'); }
+function closeConfirm(r) { $('confirmOverlay').classList.remove('active'); if (cfCb) cfCb(r); cfCb = null; }
+
+function toast(msg) {
+  var t = $('toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--accent-fg);padding:10px 24px;border-radius:10px;font-size:14px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;'; document.body.appendChild(t); }
+  t.textContent = msg; t.style.opacity = '1'; setTimeout(function() { t.style.opacity = '0'; }, 2000);
 }
 
-function closeCatModal() {
-  document.getElementById('catModalOverlay').classList.remove('active');
-  catModalCallback = null;
+function fillCats(sel) {
+  var s = $('siteCategory'); s.innerHTML = '';
+  D.categories.forEach(function(c) { var o = document.createElement('option'); o.value = c; o.textContent = c; if (c === (sel || D.categories[0])) o.selected = true; s.appendChild(o); });
+  var o = document.createElement('option'); o.value = '__new__'; o.textContent = '➕ 新建分类...'; s.appendChild(o);
+  s.onchange = function() { if (this.value === '__new__') { this.value = sel || D.categories[0]; addCat(); } };
 }
 
-function showConfirm(title, msg, callback) {
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmMsg').textContent = msg;
-  confirmCallback = callback;
-  document.getElementById('confirmOverlay').classList.add('active');
+function addSite(cat) {
+  editIdx = -1; $('modalOverlay').querySelector('h2').textContent = '添加网站';
+  $('siteUrl').value = ''; $('siteName').value = ''; $('siteDesc').value = ''; $('siteUrl').disabled = false;
+  $('logoPreview').innerHTML = '<span>输入网址后自动获取</span>'; logoUrl = ''; fillCats(cat);
+  $('modalOverlay').classList.add('active'); $('saveBtn').disabled = false; $('saveBtn').textContent = '添加';
+  setTimeout(function() { $('siteUrl').focus(); }, 100);
 }
 
-function closeConfirm(result) {
-  document.getElementById('confirmOverlay').classList.remove('active');
-  if (confirmCallback) confirmCallback(result);
-  confirmCallback = null;
+function editSite(idx) {
+  editIdx = idx; var s = D.sites[idx];
+  $('modalOverlay').querySelector('h2').textContent = '编辑网站';
+  $('siteUrl').value = s.url; $('siteUrl').disabled = true; $('siteName').value = s.name; $('siteDesc').value = s.desc || '';
+  logoUrl = s.favicon || favicon(s.url); fillCats(s.category);
+  var p = $('logoPreview');
+  if (logoUrl) { p.innerHTML = ''; var img = document.createElement('img'); img.src = logoUrl; img.alt = '图标'; p.appendChild(img); var sp = document.createElement('span'); sp.textContent = domain(s.url) + ' 的图标'; p.appendChild(sp); }
+  else p.innerHTML = '<span>无图标</span>';
+  $('modalOverlay').classList.add('active'); $('saveBtn').disabled = false; $('saveBtn').textContent = '保存';
 }
 
-function showToast(msg) {
-  var toast = document.getElementById('toast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'toast';
-    toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--accent-fg);padding:10px 24px;border-radius:10px;font-size:14px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.style.opacity = '1';
-  setTimeout(function() { toast.style.opacity = '0'; }, 2000);
-}
-
-function escapeHtml(str) {
-  var div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-function populateCategorySelect(selectedCat) {
-  var select = document.getElementById('siteCategory');
-  select.innerHTML = '';
-  getAllCategories().forEach(function(cat) {
-    var opt = document.createElement('option');
-    opt.value = cat;
-    opt.textContent = cat;
-    if (cat === (selectedCat || siteData.categories[0])) opt.selected = true;
-    select.appendChild(opt);
-  });
-  var newCatOpt = document.createElement('option');
-  newCatOpt.value = '__new__';
-  newCatOpt.textContent = '➕ 新建分类...';
-  select.appendChild(newCatOpt);
-  select.onchange = function() {
-    if (this.value === '__new__') { this.value = selectedCat || siteData.categories[0]; addCategory(); }
-  };
-}
-
-function openModal(category) {
-  editingSiteIdx = -1;
-  document.querySelector('.modal h2').textContent = '添加网站';
-  document.getElementById('siteUrl').value = '';
-  document.getElementById('siteName').value = '';
-  document.getElementById('siteDesc').value = '';
-  document.getElementById('logoPreview').innerHTML = '<span>输入网址后自动获取</span>';
-  document.getElementById('siteUrl').disabled = false;
-  currentLogoUrl = '';
-  populateCategorySelect(category);
-  document.getElementById('modalOverlay').classList.add('active');
-  document.getElementById('saveBtn').disabled = false;
-  document.getElementById('saveBtn').textContent = '添加';
-  setTimeout(function() { document.getElementById('siteUrl').focus(); }, 100);
-}
-
-function openEditModal(idx) {
-  editingSiteIdx = idx;
-  var site = siteData.sites[idx];
-  document.querySelector('.modal h2').textContent = '编辑网站';
-  document.getElementById('siteUrl').value = site.url;
-  document.getElementById('siteUrl').disabled = true;
-  document.getElementById('siteName').value = site.name;
-  document.getElementById('siteDesc').value = site.desc || '';
-  currentLogoUrl = site.favicon || getFaviconUrl(site.url);
-  populateCategorySelect(site.category);
-  var preview = document.getElementById('logoPreview');
-  if (currentLogoUrl) {
-    preview.innerHTML = '';
-    var img = document.createElement('img');
-    img.src = currentLogoUrl;
-    img.alt = '图标';
-    preview.appendChild(img);
-    var span = document.createElement('span');
-    span.textContent = extractDomain(site.url) + ' 的图标';
-    preview.appendChild(span);
-  } else { preview.innerHTML = '<span>无图标</span>'; }
-  document.getElementById('modalOverlay').classList.add('active');
-  document.getElementById('saveBtn').disabled = false;
-  document.getElementById('saveBtn').textContent = '保存';
-}
-
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('active');
-  document.getElementById('siteUrl').disabled = false;
-  editingSiteIdx = -1;
-}
+function closeModal() { $('modalOverlay').classList.remove('active'); $('siteUrl').disabled = false; editIdx = -1; }
 
 function onUrlInput() {
-  clearTimeout(urlDebounce);
-  var url = document.getElementById('siteUrl').value.trim();
-  if (!url) { document.getElementById('logoPreview').innerHTML = '<span>输入网址后自动获取</span>'; currentLogoUrl = ''; return; }
-  document.getElementById('logoPreview').innerHTML = '<span class="loading">正在获取图标...</span>';
-  urlDebounce = setTimeout(function() {
-    var normalized = url;
-    if (!/^https?:\/\//i.test(normalized)) normalized = 'https://' + normalized;
-    document.getElementById('siteUrl').value = normalized;
-    var faviconUrl = getFaviconUrl(normalized);
-    currentLogoUrl = faviconUrl;
-    var domain = extractDomain(normalized);
-    if (!document.getElementById('siteName').value) document.getElementById('siteName').value = domain;
-    var preview = document.getElementById('logoPreview');
-    if (faviconUrl) {
-      preview.innerHTML = '';
-      var img = document.createElement('img');
-      img.src = faviconUrl;
-      img.alt = '图标';
-      img.onerror = function() { preview.innerHTML = '<span>图标获取失败，将使用默认图标</span>'; currentLogoUrl = ''; };
-      preview.appendChild(img);
-      var span = document.createElement('span');
-      span.textContent = domain + ' 的图标';
-      preview.appendChild(span);
-    } else { preview.innerHTML = '<span>无法获取图标</span>'; }
+  clearTimeout(urlTimer); var url = $('siteUrl').value.trim();
+  if (!url) { $('logoPreview').innerHTML = '<span>输入网址后自动获取</span>'; logoUrl = ''; return; }
+  $('logoPreview').innerHTML = '<span class="loading">正在获取图标...</span>';
+  urlTimer = setTimeout(function() {
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    $('siteUrl').value = url; var f = favicon(url); logoUrl = f; var d = domain(url);
+    if (!$('siteName').value) $('siteName').value = d;
+    var p = $('logoPreview');
+    if (f) { p.innerHTML = ''; var img = document.createElement('img'); img.src = f; img.alt = '图标'; img.onerror = function() { p.innerHTML = '<span>图标获取失败</span>'; logoUrl = ''; }; p.appendChild(img); var sp = document.createElement('span'); sp.textContent = d + ' 的图标'; p.appendChild(sp); }
+    else p.innerHTML = '<span>无法获取图标</span>';
   }, 500);
 }
 
 function saveSite() {
-  var url = document.getElementById('siteUrl').value.trim();
-  var name = document.getElementById('siteName').value.trim();
-  var desc = document.getElementById('siteDesc').value.trim();
-  var category = document.getElementById('siteCategory').value;
-  if (!url) { alert('请输入网站地址'); return; }
-  if (!name) { alert('请输入网站名称'); return; }
-
-  if (editingSiteIdx >= 0) {
-    siteData.sites[editingSiteIdx].name = name;
-    siteData.sites[editingSiteIdx].desc = desc;
-    siteData.sites[editingSiteIdx].category = category;
-    if (currentLogoUrl) siteData.sites[editingSiteIdx].favicon = currentLogoUrl;
-  } else {
-    if (siteData.sites.some(function(s) { return s.url === url; })) { alert('该网站已存在'); return; }
-    siteData.sites.push({ name: name, url: url, desc: desc || '', category: category, favicon: currentLogoUrl || '' });
-  }
-  closeModal();
-  pushData();
-  renderNav();
+  var url = $('siteUrl').value.trim(), name = $('siteName').value.trim(), desc = $('siteDesc').value.trim(), cat = $('siteCategory').value;
+  if (!url) { alert('请输入网站地址'); return; } if (!name) { alert('请输入网站名称'); return; }
+  if (editIdx >= 0) { D.sites[editIdx].name = name; D.sites[editIdx].desc = desc; D.sites[editIdx].category = cat; if (logoUrl) D.sites[editIdx].favicon = logoUrl; }
+  else { if (D.sites.some(function(s) { return s.url === url; })) { alert('该网站已存在'); return; } D.sites.push({ name: name, url: url, desc: desc || '', category: cat, favicon: logoUrl || '' }); }
+  closeModal(); push(); render();
 }
 
-function deleteSite(idx) {
-  var site = siteData.sites[idx];
-  showConfirm('删除网站', '确定删除「' + site.name + '」？', function(ok) {
-    if (!ok) return;
-    siteData.sites.splice(idx, 1);
-    pushData();
-    renderNav();
+function delSite(idx) { confirm('删除网站', '确定删除「' + D.sites[idx].name + '」？', function(ok) { if (!ok) return; D.sites.splice(idx, 1); push(); render(); }); }
+
+function openAdmin(mode) {
+  adminMode = mode;
+  ['adminPwdGroup','adminNewPwdGroup','adminTokenGroup','adminRepoGroup','otaUpgradeGroup'].forEach(function(id) { $(id).style.display = 'none'; });
+  if (mode === 'login') {
+    $('adminModalTitle').textContent = '🔒 验证密码'; $('adminPwdGroup').style.display = 'block'; $('adminPwdInput').value = ''; $('adminPwdInput').placeholder = '请输入管理员密码';
+  } else {
+    $('adminModalTitle').textContent = '🔑 管理员配置';
+    $('adminNewPwdGroup').style.display = 'block'; $('adminNewPwdInput').value = ''; $('adminNewPwdInput').placeholder = pwdHash ? '修改密码（留空不修改）' : '设置管理员密码';
+    $('adminTokenGroup').style.display = 'block'; $('adminTokenInput').value = token;
+    $('adminRepoGroup').style.display = 'block'; $('repoInfoInput').value = repo;
+    $('otaUpgradeGroup').style.display = 'block'; $('otaCurVer').textContent = 'v' + VER; $('otaNewVer').textContent = '';
+  }
+  $('adminOverlay').classList.add('active'); $('adminSaveBtn').textContent = mode === 'login' ? '验证' : '保存';
+  setTimeout(function() { (mode === 'login' ? $('adminPwdInput') : $('adminNewPwdInput')).focus(); }, 100);
+}
+
+function closeAdminModal() { $('adminOverlay').classList.remove('active'); adminMode = ''; }
+
+function adminModalAction() {
+  if (adminMode === 'login') {
+    if (hash($('adminPwdInput').value) === pwdHash) { closeAdminModal(); enterEdit(); } else { toast('密码错误'); }
+  } else {
+    var np = $('adminNewPwdInput').value;
+    if (np) { pwdHash = hash(np); localStorage.setItem('kai_pwd', pwdHash); }
+    token = $('adminTokenInput').value.trim(); repo = $('repoInfoInput').value.trim();
+    localStorage.setItem('kai_token', token); localStorage.setItem('kai_repo', repo);
+    toast('配置已保存'); closeAdminModal();
+  }
+}
+
+function onOtaFileSelect(input) {
+  var file = input.files[0]; if (!file) return;
+  var m = file.name.match(/(\d+\.\d+\.\d+)/);
+  if (m) $('otaNewVer').textContent = '→ v' + m[1]; else $('otaNewVer').textContent = '→ ' + file.name;
+  confirm('文件升级', '将上传「' + file.name + '」替换仓库中的 index.html，确定？', function(ok) {
+    if (!ok) { input.value = ''; return; }
+    if (!token || !repo) { toast('请先配置 GitHub Token 和仓库信息'); input.value = ''; return; }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var html = e.target.result;
+      toast('正在推送更新...');
+      fetch('https://api.github.com/repos/' + repo + '/contents/index.html', {
+        headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
+      }).then(function(r) { return r.json(); }).then(function(info) {
+        var ver = (html.match(/var VER\s*=\s*'([^']+)'/) || [,'?'])[1];
+        fetch('https://api.github.com/repos/' + repo + '/contents/index.html', {
+          method: 'PUT',
+          headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'OTA 升级到 v' + ver, content: btoa(unescape(encodeURIComponent(html))), sha: info.sha })
+        }).then(function(r) { return r.json(); }).then(function(res) {
+          if (res.content) { toast('升级成功！3秒后刷新...'); setTimeout(function() { location.reload(); }, 3000); }
+          else toast('升级失败: ' + (res.message || '未知错误'));
+        });
+      });
+    };
+    reader.readAsText(file);
   });
 }
 
-function openPwdModal(title, label, callback) {
-  document.getElementById('pwdModalTitle').textContent = title;
-  document.getElementById('pwdLabel').textContent = label;
-  document.getElementById('pwdInput').value = '';
-  pwdCallback = callback;
-  document.getElementById('pwdModalOverlay').classList.add('active');
-  setTimeout(function() { document.getElementById('pwdInput').focus(); }, 100);
-}
+function enterEdit() { edit = true; document.body.classList.add('edit-mode'); $('settingsBtn').textContent = '✓'; $('settingsBtn').title = '完成编辑'; $('adminBtn').style.display = 'flex'; render(); }
 
-function closePwdModal() {
-  document.getElementById('pwdModalOverlay').classList.remove('active');
-  pwdCallback = null;
-}
-
-function submitPwd() {
-  var pwd = document.getElementById('pwdInput').value;
-  if (!pwd) return;
-  if (pwdCallback) pwdCallback(pwd);
-  closePwdModal();
-}
-
-function closeSetPwdModal() {
-  document.getElementById('setPwdOverlay').classList.remove('active');
-}
-
-function saveNewPwd() {
-  var newPwd = document.getElementById('newPwdInput').value;
-  var confirmPwd = document.getElementById('confirmPwdInput').value;
-  if (!newPwd) { showToast('请输入密码'); return; }
-  if (newPwd !== confirmPwd) { showToast('两次密码不一致'); return; }
-  editPasswordHash = simpleHash(newPwd);
-  localStorage.setItem('kai_edit_pwd', editPasswordHash);
-  closeSetPwdModal();
-  showToast('密码设置成功');
-}
-
-function openSetPwdModal() {
-  document.getElementById('newPwdInput').value = '';
-  document.getElementById('confirmPwdInput').value = '';
-  document.getElementById('setPwdOverlay').classList.add('active');
-  setTimeout(function() { document.getElementById('newPwdInput').focus(); }, 100);
-}
-
-function closeTokenModal() {
-  document.getElementById('tokenOverlay').classList.remove('active');
-}
-
-function openTokenModal() {
-  document.getElementById('adminPwdInput').value = '';
-  document.getElementById('adminPwdInput').placeholder = editPasswordHash ? '修改管理员密码（留空不修改）' : '设置管理员密码';
-  document.getElementById('adminTokenInput').value = adminToken;
-  document.getElementById('repoInfoInput').value = repoInfo;
-  document.getElementById('tokenOverlay').classList.add('active');
-}
-
-function saveTokenSettings() {
-  var newPwd = document.getElementById('adminPwdInput').value;
-  if (newPwd) {
-    editPasswordHash = simpleHash(newPwd);
-    localStorage.setItem('kai_edit_pwd', editPasswordHash);
-  }
-  adminToken = document.getElementById('adminTokenInput').value.trim();
-  repoInfo = document.getElementById('repoInfoInput').value.trim();
-  localStorage.setItem('kai_admin_token', adminToken);
-  localStorage.setItem('kai_repo_info', repoInfo);
-  showToast('管理员配置已保存');
-  closeTokenModal();
-}
-
-document.getElementById('settingsBtn').addEventListener('click', function() {
-  if (isEditMode) {
-    isEditMode = false;
-    document.body.classList.remove('edit-mode');
-    this.textContent = '⚙️';
-    this.title = '设置';
-    document.getElementById('adminBtn').style.display = 'none';
-    return;
-  }
-  if (editPasswordHash) {
-    openPwdModal('编辑验证', '请输入编辑密码', function(pwd) {
-      if (simpleHash(pwd) === editPasswordHash) {
-        isEditMode = true;
-        document.body.classList.add('edit-mode');
-        document.getElementById('settingsBtn').textContent = '✓';
-        document.getElementById('settingsBtn').title = '完成编辑';
-        document.getElementById('adminBtn').style.display = 'flex';
-        renderNav();
-      } else showToast('密码错误');
-    });
-  } else {
-    isEditMode = true;
-    document.body.classList.add('edit-mode');
-    this.textContent = '✓';
-    this.title = '完成编辑';
-    document.getElementById('adminBtn').style.display = 'flex';
-  }
+$('settingsBtn').addEventListener('click', function() {
+  if (edit) { edit = false; document.body.classList.remove('edit-mode'); this.textContent = '⚙️'; this.title = '设置'; $('adminBtn').style.display = 'none'; return; }
+  if (pwdHash) openAdmin('login'); else enterEdit();
 });
 
-document.getElementById('adminBtn').addEventListener('click', function() { openTokenModal(); });
+$('adminBtn').addEventListener('click', function() { openAdmin('config'); });
 
-document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
-document.getElementById('catModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeCatModal(); });
-document.getElementById('confirmOverlay').addEventListener('click', function(e) { if (e.target === this) closeConfirm(false); });
-document.getElementById('pwdModalOverlay').addEventListener('click', function(e) { if (e.target === this) closePwdModal(); });
-document.getElementById('setPwdOverlay').addEventListener('click', function(e) { if (e.target === this) closeSetPwdModal(); });
-document.getElementById('tokenOverlay').addEventListener('click', function(e) { if (e.target === this) closeTokenModal(); });
+$('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+$('catModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeCatModal(); });
+$('confirmOverlay').addEventListener('click', function(e) { if (e.target === this) closeConfirm(false); });
+$('adminOverlay').addEventListener('click', function(e) { if (e.target === this) closeAdminModal(); });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeModal(); closeCatModal(); closeConfirm(false); closeAdminModal(); } });
 
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') { closeModal(); closeCatModal(); closeConfirm(false); closePwdModal(); closeSetPwdModal(); closeTokenModal(); }
-});
-
-var engines = {
-  baidu:  { action: 'https://www.baidu.com/s',  param: 'wd' },
-  google: { action: 'https://www.google.com/search', param: 'q' },
-  bing:   { action: 'https://www.bing.com/search',  param: 'q' }
-};
-
-var currentEngine = 'baidu';
-
-function switchEngine(engine) {
-  currentEngine = engine;
-  var form = document.getElementById('searchForm');
-  form.action = engines[engine].action;
-  var input = document.getElementById('searchInput');
-  input.name = engines[engine].param;
-  var placeholders = { baidu: '搜索你想要的内容...', google: 'Search with Google...', bing: 'Search with Bing...' };
-  input.placeholder = placeholders[engine];
-}
+var engines = { baidu: { action: 'https://www.baidu.com/s', param: 'wd' }, google: { action: 'https://www.google.com/search', param: 'q' }, bing: { action: 'https://www.bing.com/search', param: 'q' } };
+function switchEngine(e) { var f = $('searchForm'); f.action = engines[e].action; var i = $('searchInput'); i.name = engines[e].param; i.placeholder = { baidu: '搜索你想要的内容...', google: 'Search with Google...', bing: 'Search with Bing...' }[e]; }
 
 function updateClock() {
-  var now = new Date();
-  var h = String(now.getHours()).padStart(2, '0');
-  var m = String(now.getMinutes()).padStart(2, '0');
-  document.getElementById('clock').textContent = h + ':' + m;
-  var weekdays = ['日','一','二','三','四','五','六'];
-  document.getElementById('dateStr').textContent = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 星期' + weekdays[now.getDay()];
+  var n = new Date();
+  $('clock').textContent = String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
+  var w = ['日','一','二','三','四','五','六'];
+  $('dateStr').textContent = n.getFullYear() + '年' + (n.getMonth()+1) + '月' + n.getDate() + '日 星期' + w[n.getDay()];
 }
+updateClock(); setInterval(updateClock, 1000);
 
-updateClock();
-setInterval(updateClock, 1000);
+var fallback = {"categories":["常用工具","开发资源","社交媒体","学习教育","效率工具","自定义"],"categoryOrder":[],"sites":[{"name":"百度","url":"https://www.baidu.com","desc":"搜索引擎","category":"常用工具","emoji":"🔍","emojiBg":"#F1F5F9","emojiColor":"#0052FF"},{"name":"Google 翻译","url":"https://translate.google.com","desc":"多语言翻译","category":"常用工具","emoji":"🌐","emojiBg":"#EEF2FF","emojiColor":"#4F46E5"},{"name":"Notion","url":"https://www.notion.so","desc":"笔记与协作","category":"常用工具","emoji":"📝","emojiBg":"#F0FDF4","emojiColor":"#16A34A"},{"name":"ChatGPT","url":"https://chat.openai.com","desc":"AI 对话助手","category":"常用工具","emoji":"🤖","emojiBg":"#F0F9FF","emojiColor":"#0284C7"},{"name":"Canva","url":"https://www.canva.cn","desc":"在线设计","category":"常用工具","emoji":"🎨","emojiBg":"#FFF7ED","emojiColor":"#EA580C"},{"name":"GitHub","url":"https://github.com","desc":"代码托管","category":"开发资源","emoji":"🐙","emojiBg":"#F1F5F9","emojiColor":"#0F172A"},{"name":"StackOverflow","url":"https://stackoverflow.com","desc":"技术问答","category":"开发资源","emoji":"📚","emojiBg":"#FFF7ED","emojiColor":"#F59E0B"},{"name":"MDN","url":"https://developer.mozilla.org","desc":"Web 开发文档","category":"开发资源","emoji":"📖","emojiBg":"#EEF2FF","emojiColor":"#4F46E5"},{"name":"CodePen","url":"https://codepen.io","desc":"在线代码编辑","category":"开发资源","emoji":"✏️","emojiBg":"#F0FDF4","emojiColor":"#16A34A"},{"name":"npm","url":"https://www.npmjs.com","desc":"包管理器","category":"开发资源","emoji":"📦","emojiBg":"#F1F5F9","emojiColor":"#CB3837"},{"name":"微博","url":"https://weibo.com","desc":"社交平台","category":"社交媒体","emoji":"📢","emojiBg":"#FFF1F2","emojiColor":"#E11D48"},{"name":"知乎","url":"https://www.zhihu.com","desc":"知识社区","category":"社交媒体","emoji":"💡","emojiBg":"#EEF2FF","emojiColor":"#0066FF"},{"name":"哔哩哔哩","url":"https://www.bilibili.com","desc":"视频社区","category":"社交媒体","emoji":"🎬","emojiBg":"#F0F9FF","emojiColor":"#00A1D6"},{"name":"Twitter","url":"https://twitter.com","desc":"全球社交","category":"社交媒体","emoji":"🐦","emojiBg":"#F0F9FF","emojiColor":"#1D9BF0"},{"name":"YouTube","url":"https://www.youtube.com","desc":"全球视频","category":"社交媒体","emoji":"▶️","emojiBg":"#FFF7ED","emojiColor":"#FF0000"},{"name":"Coursera","url":"https://www.coursera.org","desc":"在线课程","category":"学习教育","emoji":"🎓","emojiBg":"#EEF2FF","emojiColor":"#0056D2"},{"name":"中国大学MOOC","url":"https://www.icourse163.org","desc":"国内课程","category":"学习教育","emoji":"🏫","emojiBg":"#F0FDF4","emojiColor":"#C41230"},{"name":"力扣","url":"https://leetcode.cn","desc":"算法练习","category":"学习教育","emoji":"🧩","emojiBg":"#FFF7ED","emojiColor":"#FFA116"},{"name":"W3Schools","url":"https://www.w3schools.com","desc":"Web 教程","category":"学习教育","emoji":"💻","emojiBg":"#F0FDF4","emojiColor":"#04AA6D"},{"name":"Gmail","url":"https://mail.google.com","desc":"邮件服务","category":"效率工具","emoji":"✉️","emojiBg":"#FFF7ED","emojiColor":"#EA4335"},{"name":"Google Drive","url":"https://drive.google.com","desc":"云存储","category":"效率工具","emoji":"📁","emojiBg":"#EEF2FF","emojiColor":"#4285F4"},{"name":"Figma","url":"https://www.figma.com","desc":"设计协作","category":"效率工具","emoji":"🎯","emojiBg":"#FFF1F2","emojiColor":"#A259FF"},{"name":"Excalidraw","url":"https://excalidraw.com","desc":"手绘白板","category":"效率工具","emoji":"✍️","emojiBg":"#F0FDF4","emojiColor":"#6965DB"}]};
 
-var fallbackData = {
-  "categories": ["常用工具", "开发资源", "社交媒体", "学习教育", "效率工具", "自定义"],
-  "categoryOrder": [],
-  "sites": [
-    { "name": "百度", "url": "https://www.baidu.com", "desc": "搜索引擎", "category": "常用工具", "emoji": "🔍", "emojiBg": "#F1F5F9", "emojiColor": "#0052FF" },
-    { "name": "Google 翻译", "url": "https://translate.google.com", "desc": "多语言翻译", "category": "常用工具", "emoji": "🌐", "emojiBg": "#EEF2FF", "emojiColor": "#4F46E5" },
-    { "name": "Notion", "url": "https://www.notion.so", "desc": "笔记与协作", "category": "常用工具", "emoji": "📝", "emojiBg": "#F0FDF4", "emojiColor": "#16A34A" },
-    { "name": "ChatGPT", "url": "https://chat.openai.com", "desc": "AI 对话助手", "category": "常用工具", "emoji": "🤖", "emojiBg": "#F0F9FF", "emojiColor": "#0284C7" },
-    { "name": "Canva", "url": "https://www.canva.cn", "desc": "在线设计", "category": "常用工具", "emoji": "🎨", "emojiBg": "#FFF7ED", "emojiColor": "#EA580C" },
-    { "name": "GitHub", "url": "https://github.com", "desc": "代码托管", "category": "开发资源", "emoji": "🐙", "emojiBg": "#F1F5F9", "emojiColor": "#0F172A" },
-    { "name": "StackOverflow", "url": "https://stackoverflow.com", "desc": "技术问答", "category": "开发资源", "emoji": "📚", "emojiBg": "#FFF7ED", "emojiColor": "#F59E0B" },
-    { "name": "MDN", "url": "https://developer.mozilla.org", "desc": "Web 开发文档", "category": "开发资源", "emoji": "📖", "emojiBg": "#EEF2FF", "emojiColor": "#4F46E5" },
-    { "name": "CodePen", "url": "https://codepen.io", "desc": "在线代码编辑", "category": "开发资源", "emoji": "✏️", "emojiBg": "#F0FDF4", "emojiColor": "#16A34A" },
-    { "name": "npm", "url": "https://www.npmjs.com", "desc": "包管理器", "category": "开发资源", "emoji": "📦", "emojiBg": "#F1F5F9", "emojiColor": "#CB3837" },
-    { "name": "微博", "url": "https://weibo.com", "desc": "社交平台", "category": "社交媒体", "emoji": "📢", "emojiBg": "#FFF1F2", "emojiColor": "#E11D48" },
-    { "name": "知乎", "url": "https://www.zhihu.com", "desc": "知识社区", "category": "社交媒体", "emoji": "💡", "emojiBg": "#EEF2FF", "emojiColor": "#0066FF" },
-    { "name": "哔哩哔哩", "url": "https://www.bilibili.com", "desc": "视频社区", "category": "社交媒体", "emoji": "🎬", "emojiBg": "#F0F9FF", "emojiColor": "#00A1D6" },
-    { "name": "Twitter", "url": "https://twitter.com", "desc": "全球社交", "category": "社交媒体", "emoji": "🐦", "emojiBg": "#F0F9FF", "emojiColor": "#1D9BF0" },
-    { "name": "YouTube", "url": "https://www.youtube.com", "desc": "全球视频", "category": "社交媒体", "emoji": "▶️", "emojiBg": "#FFF7ED", "emojiColor": "#FF0000" },
-    { "name": "Coursera", "url": "https://www.coursera.org", "desc": "在线课程", "category": "学习教育", "emoji": "🎓", "emojiBg": "#EEF2FF", "emojiColor": "#0056D2" },
-    { "name": "中国大学MOOC", "url": "https://www.icourse163.org", "desc": "国内课程", "category": "学习教育", "emoji": "🏫", "emojiBg": "#F0FDF4", "emojiColor": "#C41230" },
-    { "name": "力扣", "url": "https://leetcode.cn", "desc": "算法练习", "category": "学习教育", "emoji": "🧩", "emojiBg": "#FFF7ED", "emojiColor": "#FFA116" },
-    { "name": "W3Schools", "url": "https://www.w3schools.com", "desc": "Web 教程", "category": "学习教育", "emoji": "💻", "emojiBg": "#F0FDF4", "emojiColor": "#04AA6D" },
-    { "name": "Gmail", "url": "https://mail.google.com", "desc": "邮件服务", "category": "效率工具", "emoji": "✉️", "emojiBg": "#FFF7ED", "emojiColor": "#EA4335" },
-    { "name": "Google Drive", "url": "https://drive.google.com", "desc": "云存储", "category": "效率工具", "emoji": "📁", "emojiBg": "#EEF2FF", "emojiColor": "#4285F4" },
-    { "name": "Figma", "url": "https://www.figma.com", "desc": "设计协作", "category": "效率工具", "emoji": "🎯", "emojiBg": "#FFF1F2", "emojiColor": "#A259FF" },
-    { "name": "Excalidraw", "url": "https://excalidraw.com", "desc": "手绘白板", "category": "效率工具", "emoji": "✍️", "emojiBg": "#F0FDF4", "emojiColor": "#6965DB" }
-  ]
-};
-
-function initData() {
-  if (adminToken && repoInfo) {
-    fetch('https://api.github.com/repos/' + repoInfo + '/contents/data.json', {
-      headers: { 'Authorization': 'token ' + adminToken, 'Accept': 'application/vnd.github.v3+json' }
-    }).then(function(r) { return r.json(); }).then(function(res) {
-      if (res.sha) dataSha = res.sha;
-      if (res.content) {
-        try { siteData = JSON.parse(decodeURIComponent(escape(atob(res.content.replace(/\n/g, ''))))); } catch(e) {}
-      }
-      renderNav();
-      document.getElementById('searchInput').focus();
-    }).catch(function() {
-      siteData = fallbackData;
-      renderNav();
-      document.getElementById('searchInput').focus();
-    });
+function init() {
+  var done = function() { render(); $('searchInput').focus(); };
+  if (token && repo) {
+    fetch('https://api.github.com/repos/' + repo + '/contents/data.json', { headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' } })
+    .then(function(r) { return r.json(); }).then(function(r) {
+      if (r.sha) sha = r.sha;
+      if (r.content) try { D = JSON.parse(decodeURIComponent(escape(atob(r.content.replace(/\n/g, ''))))); } catch(e) { D = fallback; }
+      done();
+    }).catch(function() { D = fallback; done(); });
   } else {
-    fetch('data.json')
-      .then(function(r) { return r.json(); })
-      .then(function(data) { siteData = data; renderNav(); document.getElementById('searchInput').focus(); })
-      .catch(function() { siteData = fallbackData; renderNav(); document.getElementById('searchInput').focus(); });
+    fetch('data.json').then(function(r) { return r.json(); }).then(function(d) { D = d; done(); }).catch(function() { D = fallback; done(); });
   }
 }
-
-initData();
+init();
 </script>
+
 
 </body>
 </html>

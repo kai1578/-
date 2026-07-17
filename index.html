@@ -821,7 +821,8 @@ var VER = '1.0.0';
 
 function hash(s) { var h = 0; for (var i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0; return 'h' + Math.abs(h).toString(36); }
 function $(id) { return document.getElementById(id); }
-function favicon(u) { try { return 'https://www.google.com/s2/favicons?domain=' + new URL(u).hostname + '&sz=64'; } catch { return ''; } }
+function favicon(u) { try { return 'icons/' + new URL(u).hostname.replace(/^www\./,'').replace(/\./g,'_') + '.png'; } catch { return ''; } }
+function faviconRemote(u) { try { return 'https://www.google.com/s2/favicons?domain=' + new URL(u).hostname + '&sz=64'; } catch { return ''; } }
 function domain(u) { try { return new URL(u).hostname; } catch { return ''; } }
 function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
@@ -867,10 +868,21 @@ function render() {
       card.onclick = function(e) { if (edit) { e.preventDefault(); editSite(idx); } };
 
       var icon = document.createElement('div'); icon.className = 'icon';
-      if (site.favicon) {
+      var localIcon = favicon(site.url);
+      if (site.favicon && site.favicon.indexOf('icons/') === 0) {
+        icon.style.background = '#F1F5F9';
+        var img = document.createElement('img'); img.src = site.favicon; img.alt = site.name;
+        img.onerror = function() { this.src = faviconRemote(site.url); this.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; }; };
+        icon.appendChild(img);
+      } else if (site.favicon) {
         icon.style.background = '#F1F5F9';
         var img = document.createElement('img'); img.src = site.favicon; img.alt = site.name;
         img.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; };
+        icon.appendChild(img);
+      } else if (localIcon) {
+        icon.style.background = '#F1F5F9';
+        var img = document.createElement('img'); img.src = localIcon; img.alt = site.name;
+        img.onerror = function() { this.src = faviconRemote(site.url); this.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; }; };
         icon.appendChild(img);
       } else { icon.style.background = site.emojiBg || '#F1F5F9'; icon.style.color = site.emojiColor || '#0052FF'; icon.textContent = site.emoji || '🔗'; }
       card.appendChild(icon);

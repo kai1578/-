@@ -826,6 +826,21 @@ function faviconRemote(u) { try { return 'https://www.google.com/s2/favicons?dom
 function domain(u) { try { return new URL(u).hostname; } catch { return ''; } }
 function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
+function ensureIconsDir() {
+  if (!token || !repo) return;
+  fetch('https://api.github.com/repos/' + repo + '/contents/icons/.gitkeep', {
+    headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
+  }).then(function(r) { return r.json(); }).then(function(info) {
+    if (info.message && info.message.indexOf('Not Found') > -1) {
+      fetch('https://api.github.com/repos/' + repo + '/contents/icons/.gitkeep', {
+        method: 'PUT',
+        headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: '创建 icons 目录', content: btoa('') })
+      });
+    }
+  });
+}
+
 function push() {
   if (!token || !repo) return;
   clearTimeout(pushTimer);
@@ -1125,6 +1140,7 @@ var fallback = {"categories":["常用工具","开发资源","社交媒体","学�
 function init() {
   var done = function() { render(); $('searchInput').focus(); };
   if (token && repo) {
+    ensureIconsDir();
     fetch('https://api.github.com/repos/' + repo + '/contents/data.json', { headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' } })
     .then(function(r) { return r.json(); }).then(function(r) {
       if (r.sha) sha = r.sha;

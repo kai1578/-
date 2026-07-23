@@ -246,6 +246,13 @@
       "desc": "",
       "category": "NAS",
       "favicon": "https://www.google.com/s2/favicons?domain=192.168.10.9&sz=64"
+    },
+    {
+      "name": "飞牛（公司电脑）",
+      "url": "http://100.66.1.5:2206/",
+      "desc": "",
+      "category": "NAS",
+      "favicon": ""
     }
   ]
 }

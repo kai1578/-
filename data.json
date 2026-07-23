@@ -234,9 +234,9 @@
       "favicon": "https://www.google.com/s2/favicons?domain=www.taobao.com&sz=64"
     },
     {
-      "name": "（穿透）Luna TV",
+      "name": "Luna TV",
       "url": "http://100.66.1.5:3000/",
-      "desc": "",
+      "desc": "公司电脑",
       "category": "NAS",
       "favicon": "https://www.google.com/s2/favicons?domain=100.66.1.5&sz=64"
     },

@@ -241,9 +241,9 @@
       "favicon": "https://www.google.com/s2/favicons?domain=100.66.1.5&sz=64"
     },
     {
-      "name": "（局域网）Luna TV",
+      "name": "Luna TV",
       "url": "http://192.168.10.9:3000/",
-      "desc": "",
+      "desc": "局域网",
       "category": "NAS",
       "favicon": "https://www.google.com/s2/favicons?domain=192.168.10.9&sz=64"
     },

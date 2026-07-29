@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0052FF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
 <title>凯 - 个人导航</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -24,6 +28,29 @@
   --shadow-lg: 0 10px 15px rgba(0,0,0,0.08);
   --shadow-accent: 0 4px 14px rgba(0,82,255,0.25);
   --danger: #EF4444;
+  --glow-1: rgba(0,82,255,0.06);
+  --glow-2: rgba(77,124,255,0.05);
+  --icon-bg: #F1F5F9;
+}
+
+[data-theme="dark"] {
+  --bg: #0F172A;
+  --fg: #E2E8F0;
+  --muted: #1E293B;
+  --muted-fg: #94A3B8;
+  --accent: #3B82F6;
+  --accent-2: #60A5FA;
+  --accent-fg: #FFFFFF;
+  --border: #334155;
+  --card: #1E293B;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.25);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.3);
+  --shadow-accent: 0 4px 14px rgba(59,130,246,0.3);
+  --danger: #F87171;
+  --glow-1: rgba(59,130,246,0.08);
+  --glow-2: rgba(96,165,250,0.06);
+  --icon-bg: #334155;
 }
 
 html { scroll-behavior: smooth; }
@@ -43,7 +70,7 @@ body::before {
   right: -200px;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(0,82,255,0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--glow-1) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -55,7 +82,7 @@ body::after {
   left: -200px;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(77,124,255,0.05) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--glow-2) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -171,6 +198,44 @@ header h1 {
   color: var(--muted-fg);
 }
 
+.search-clear {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: var(--muted);
+  color: var(--muted-fg);
+  font-size: 14px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  margin-right: 4px;
+}
+
+.search-clear:hover {
+  background: var(--border);
+  color: var(--fg);
+}
+
+.search-clear.visible {
+  display: flex;
+}
+
+.search-shortcut {
+  font-size: 11px;
+  color: var(--muted-fg);
+  background: var(--muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  pointer-events: none;
+  border: 1px solid var(--border);
+}
+
 .search-box button {
   height: 44px;
   padding: 0 28px;
@@ -239,6 +304,14 @@ header h1 {
   margin-top: 4px;
 }
 
+.time-bar .greeting {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--fg);
+  margin-top: 8px;
+  opacity: 0.85;
+}
+
 /* ===== Nav Sections ===== */
 .nav-sections {
   margin-top: 40px;
@@ -268,13 +341,46 @@ header h1 {
   letter-spacing: 1px;
   margin-bottom: 14px;
   padding-left: 2px;
+  cursor: pointer;
+  user-select: none;
 }
+
+.nav-group-title:hover {
+  color: var(--fg);
+}
+
+.nav-group-title .collapse-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  transition: transform 0.25s ease-out;
+  flex-shrink: 0;
+  color: var(--muted-fg);
+}
+
+.nav-group.collapsed .collapse-arrow {
+  transform: rotate(-90deg);
+}
+
 
 .nav-group-title::after {
   content: '';
   flex: 1;
   height: 1px;
   background: var(--border);
+}
+
+.nav-group-title .cat-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted-fg);
+  background: var(--muted);
+  padding: 1px 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
 }
 
 .nav-group-title .cat-actions {
@@ -348,6 +454,13 @@ body.edit-mode .add-category-btn {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  transition: max-height 0.35s ease-out, opacity 0.25s ease-out;
+  overflow: hidden;
+}
+
+.nav-group.collapsed .nav-grid {
+  max-height: 0 !important;
+  opacity: 0;
 }
 
 .nav-card {
@@ -366,7 +479,15 @@ body.edit-mode .add-category-btn {
   width: auto;
   min-width: 150px;
   flex: 0 0 auto;
+  animation: cardIn 0.35s ease-out both;
 }
+
+.nav-card:nth-child(1) { animation-delay: 0s; }
+.nav-card:nth-child(2) { animation-delay: 0.03s; }
+.nav-card:nth-child(3) { animation-delay: 0.06s; }
+.nav-card:nth-child(4) { animation-delay: 0.09s; }
+.nav-card:nth-child(5) { animation-delay: 0.12s; }
+.nav-card:nth-child(n+6) { animation-delay: 0.15s; }
 
 .nav-card:hover {
   border-color: var(--accent);
@@ -413,6 +534,52 @@ body.edit-mode .add-category-btn {
   margin-top: 1px;
 }
 
+.nav-card .url-tip {
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 3;
+}
+
+.nav-card:hover .url-tip {
+  opacity: 1;
+}
+
+.nav-card.hidden {
+  display: none;
+}
+
+.nav-card .info .name mark {
+  background: rgba(0,82,255,0.15);
+  color: var(--accent);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+[data-theme="dark"] .nav-card .info .name mark {
+  background: rgba(59,130,246,0.25);
+}
+
+.nav-card.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}
+
+.nav-card.drag-over {
+  border-color: var(--accent);
+  border-style: dashed;
+}
+
 .nav-card .card-actions {
   position: absolute;
   top: -6px;
@@ -452,6 +619,13 @@ body.edit-mode .nav-card .card-actions {
 
 .nav-card .card-actions .delete-btn {
   background: var(--danger);
+}
+
+.empty-hint {
+  font-size: 13px;
+  color: var(--muted-fg);
+  padding: 8px 0;
+  font-style: italic;
 }
 
 /* ===== Add Card ===== */
@@ -618,6 +792,42 @@ body.edit-mode .nav-card .card-actions {
   box-shadow: none;
 }
 
+.back-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-fg);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: all 0.25s ease-out;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+}
+
+.back-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.back-top:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-accent);
+  transform: translateY(-2px);
+}
+
 /* ===== Footer ===== */
 footer {
   text-align: center;
@@ -649,8 +859,53 @@ footer {
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ===== Responsive ===== */
+.mobile-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  z-index: 100;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.mobile-bar button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: var(--muted-fg);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 4px 12px;
+  font-family: inherit;
+}
+
+.mobile-bar button .bar-icon {
+  font-size: 20px;
+}
+
+.mobile-bar button:active {
+  color: var(--accent);
+}
+
 @media (max-width: 640px) {
+  .mobile-bar { display: flex; }
+  body { padding-bottom: 56px; }
+  .settings-btn, .back-top { display: none; }
   header { padding-top: 32px; }
   header h1 { font-size: 22px; }
   .time-bar .time { font-size: 36px; }
@@ -658,16 +913,17 @@ footer {
   .nav-card .icon { width: 32px; height: 32px; font-size: 16px; }
   .nav-card .icon img { width: 20px; height: 20px; }
   .search-box button { padding: 0 18px; }
-  .settings-btn { top: 12px; right: 12px; width: 38px; height: 38px; font-size: 18px; }
   .modal { padding: 24px; margin: 16px; }
 }
 </style>
 </head>
 <body>
 
-<button class="settings-btn" id="settingsBtn" title="设置">⚙️</button>
-<button class="settings-btn" id="adminBtn" title="管理员配置" style="right:76px;font-size:16px;display:none;">🔑</button>
-<button class="settings-btn" id="calcBtn" title="计算器" style="right:128px;">🧮</button>
+<button class="settings-btn" id="settingsBtn" title="设置" aria-label="设置">⚙️</button>
+<button class="settings-btn" id="adminBtn" title="管理员配置" style="right:76px;font-size:16px;display:none;" aria-label="管理员配置">🔑</button>
+<button class="settings-btn" id="calcBtn" title="计算器" style="right:128px;" aria-label="计算器">🧮</button>
+<button class="settings-btn" id="themeBtn" title="切换主题" style="right:180px;" aria-label="切换主题">🌙</button>
+<button class="back-top" id="backTop" title="回到顶部" aria-label="回到顶部">↑</button>
 
 <div class="container">
   <header>
@@ -680,7 +936,9 @@ footer {
 
   <section class="search-section">
     <form class="search-box" id="searchForm" action="https://www.baidu.com/s" method="get" target="_blank">
-      <input type="text" name="wd" id="searchInput" placeholder="搜索你想要的内容..." autocomplete="off">
+      <input type="text" name="wd" id="searchInput" placeholder="搜索你想要的内容..." autocomplete="off" aria-label="搜索">
+      <button type="button" class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+      <span class="search-shortcut">/</span>
       <button type="submit">搜 索</button>
     </form>
     <div class="search-engines">
@@ -693,14 +951,23 @@ footer {
   <div class="time-bar">
     <div class="time" id="clock">00:00</div>
     <div class="date" id="dateStr"></div>
+    <div class="greeting" id="greeting"></div>
   </div>
 
-  <div class="nav-sections" id="navSections"></div>
+  <div class="nav-sections" id="navSections" role="navigation" aria-label="网站导航"></div>
 </div>
 
 <footer>
   <p>© 2026 凯 · 个人导航站</p>
 </footer>
+
+<div class="mobile-bar">
+  <button onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="bar-icon">🏠</span>首页</button>
+  <button onclick="$('searchInput').focus()"><span class="bar-icon">🔍</span>搜索</button>
+  <button onclick="$('calcOverlay').classList.add('active')"><span class="bar-icon">🧮</span>计算器</button>
+  <button id="mobileThemeBtn" onclick="$('themeBtn').click()"><span class="bar-icon">🌙</span>主题</button>
+  <button onclick="$('settingsBtn').click()"><span class="bar-icon">⚙️</span>设置</button>
+</div>
 
 <!-- Add Site Modal -->
 <div class="modal-overlay" id="modalOverlay">
@@ -796,6 +1063,13 @@ footer {
       <button class="btn-save" style="width:100%;height:44px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;background:linear-gradient(135deg,#10B981,#059669);color:white;" onclick="$('otaFileInput').click()">📁 选择文件升级</button>
       <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted-fg);">当前版本: <span id="otaCurVer"></span> <span id="otaNewVer"></span></div>
     </div>
+    <div id="dataIoGroup" style="display:none;margin-top:16px;">
+      <div style="display:flex;gap:8px;">
+      <button class="btn-save" style="flex:1;height:40px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:none;background:var(--muted);color:var(--fg);" onclick="exportData()">📤 导出数据</button>
+      <button class="btn-save" style="flex:1;height:40px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:none;background:var(--muted);color:var(--fg);" onclick="$('importFileInput').click()">📥 导入数据</button>
+      <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importData(this)">
+      </div>
+    </div>
   </div>
 </div>
 
@@ -860,11 +1134,20 @@ function render() {
   D.sites.forEach(function(s) { if (cats.indexOf(s.category) !== -1 && used.indexOf(s.category) === -1) used.push(s.category); });
   used.sort(function(a, b) { var ai = co.indexOf(a), bi = co.indexOf(b); if (ai < 0 && bi < 0) return 0; if (ai < 0) return 1; if (bi < 0) return -1; return ai - bi; });
 
+  var collapsedCats = JSON.parse(localStorage.getItem('kai_collapsed') || '[]');
+
   used.forEach(function(cat) {
     var sites = D.sites.filter(function(s) { return s.category === cat; });
+    var visits = JSON.parse(localStorage.getItem('kai_visits') || '{}');
+    sites.sort(function(a, b) { return (visits[b.url] || 0) - (visits[a.url] || 0); });
     var g = document.createElement('div'); g.className = 'nav-group';
+    if (collapsedCats.indexOf(cat) > -1) g.classList.add('collapsed');
     var t = document.createElement('div'); t.className = 'nav-group-title';
+
+    var arrow = document.createElement('span'); arrow.className = 'collapse-arrow'; arrow.textContent = '▼';
+    t.appendChild(arrow);
     t.appendChild(document.createTextNode(cat));
+    var cnt = document.createElement('span'); cnt.className = 'cat-count'; cnt.textContent = sites.length; t.appendChild(cnt);
 
     var acts = document.createElement('div'); acts.className = 'cat-actions';
     [['↑','上移',function(e){e.stopPropagation();moveCat(cat,-1);}],
@@ -876,35 +1159,60 @@ function render() {
     });
     t.appendChild(acts); g.appendChild(t);
 
+    t.addEventListener('click', function(e) {
+      if (e.target.closest('.cat-actions')) return;
+      g.classList.toggle('collapsed');
+      var cc = JSON.parse(localStorage.getItem('kai_collapsed') || '[]');
+      if (g.classList.contains('collapsed')) { if (cc.indexOf(cat) === -1) cc.push(cat); } else { cc = cc.filter(function(c) { return c !== cat; }); }
+      localStorage.setItem('kai_collapsed', JSON.stringify(cc));
+      var gridEl = g.querySelector('.nav-grid');
+      if (g.classList.contains('collapsed')) { gridEl.style.maxHeight = '0px'; gridEl.style.opacity = '0'; } else { gridEl.style.maxHeight = gridEl.scrollHeight + 'px'; gridEl.style.opacity = '1'; setTimeout(function() { gridEl.style.maxHeight = 'none'; }, 350); }
+    });
+
     var grid = document.createElement('div'); grid.className = 'nav-grid';
+    if (g.classList.contains('collapsed')) { grid.style.maxHeight = '0px'; grid.style.opacity = '0'; }
+    if (sites.length === 0) {
+      var hint = document.createElement('div'); hint.className = 'empty-hint'; hint.textContent = '暂无网站，点击下方添加'; grid.appendChild(hint);
+    }
     sites.forEach(function(site) {
       var idx = D.sites.indexOf(site);
-      var card = document.createElement('a'); card.className = 'nav-card'; card.href = site.url; card.target = '_blank'; card.draggable = false;
-      card.onclick = function(e) { if (edit) { e.preventDefault(); editSite(idx); } };
+      var card = document.createElement('a'); card.className = 'nav-card'; card.href = site.url; card.target = '_blank'; card.draggable = edit;
+      card.dataset.idx = idx;
+      card.onclick = function(e) { if (edit) { e.preventDefault(); editSite(idx); } else { var visits = JSON.parse(localStorage.getItem('kai_visits') || '{}'); visits[site.url] = (visits[site.url] || 0) + 1; localStorage.setItem('kai_visits', JSON.stringify(visits)); } };
+      card.ondblclick = function(e) { if (edit) { e.preventDefault(); editSite(idx); } };
+      if (edit) {
+        card.ondragstart = function(e) { e.dataTransfer.setData('text/plain', idx); card.classList.add('dragging'); };
+        card.ondragend = function() { card.classList.remove('dragging'); document.querySelectorAll('.nav-card.drag-over').forEach(function(c) { c.classList.remove('drag-over'); }); };
+        card.ondragover = function(e) { e.preventDefault(); if (!card.classList.contains('dragging')) card.classList.add('drag-over'); };
+        card.ondragleave = function() { card.classList.remove('drag-over'); };
+        card.ondrop = function(e) { e.preventDefault(); card.classList.remove('drag-over'); var fromIdx = parseInt(e.dataTransfer.getData('text/plain')); var toIdx = idx; if (fromIdx === toIdx) return; var item = D.sites.splice(fromIdx, 1)[0]; var newTo = toIdx > fromIdx ? toIdx - 1 : toIdx; D.sites.splice(newTo, 0, item); push(); render(); };
+      }
 
       var icon = document.createElement('div'); icon.className = 'icon';
       var localIcon = favicon(site.url);
       if (site.favicon && site.favicon.indexOf('icons/') === 0) {
-        icon.style.background = '#F1F5F9';
-        var img = document.createElement('img'); img.src = site.favicon; img.alt = site.name;
+        icon.style.background = 'var(--icon-bg)';
+        var img = document.createElement('img'); img.loading = 'lazy'; img.src = site.favicon; img.alt = site.name;
         img.onerror = function() { this.src = faviconRemote(site.url); this.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; }; };
         icon.appendChild(img);
       } else if (site.favicon) {
-        icon.style.background = '#F1F5F9';
-        var img = document.createElement('img'); img.src = site.favicon; img.alt = site.name;
+        icon.style.background = 'var(--icon-bg)';
+        var img = document.createElement('img'); img.loading = 'lazy'; img.src = site.favicon; img.alt = site.name;
         img.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; };
         icon.appendChild(img);
       } else if (localIcon) {
-        icon.style.background = '#F1F5F9';
-        var img = document.createElement('img'); img.src = localIcon; img.alt = site.name;
+        icon.style.background = 'var(--icon-bg)';
+        var img = document.createElement('img'); img.loading = 'lazy'; img.src = localIcon; img.alt = site.name;
         img.onerror = function() { this.src = faviconRemote(site.url); this.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; }; };
         icon.appendChild(img);
-      } else { icon.style.background = site.emojiBg || '#F1F5F9'; icon.style.color = site.emojiColor || '#0052FF'; icon.textContent = site.emoji || '🔗'; }
+      } else { icon.style.background = site.emojiBg || 'var(--icon-bg)'; icon.style.color = site.emojiColor || 'var(--accent)'; icon.textContent = site.emoji || (site.name ? site.name.charAt(0).toUpperCase() : '🔗'); if (!site.emoji && site.name) { icon.style.fontWeight = '700'; icon.style.fontSize = '16px'; } }
       card.appendChild(icon);
 
       var info = document.createElement('div'); info.className = 'info';
       info.innerHTML = '<div class="name">' + esc(site.name) + '</div><div class="desc">' + esc(site.desc || '') + '</div>';
       card.appendChild(info);
+
+      var urlTip = document.createElement('span'); urlTip.className = 'url-tip'; urlTip.textContent = site.url.replace(/^https?:\/\//, '').replace(/\/$/, ''); card.appendChild(urlTip);
 
       var acts2 = document.createElement('div'); acts2.className = 'card-actions';
       [['✎','edit-btn','编辑',function(e){e.preventDefault();e.stopPropagation();editSite(idx);}],
@@ -915,11 +1223,22 @@ function render() {
     });
 
     var add = document.createElement('button'); add.className = 'add-card'; add.textContent = '+ 添加网站'; add.onclick = function() { addSite(cat); };
-    grid.appendChild(add); g.appendChild(grid); c.appendChild(g);
+    grid.appendChild(add); g.appendChild(grid);
+    if (!g.classList.contains('collapsed')) { grid.style.maxHeight = 'none'; grid.style.opacity = '1'; }
+    c.appendChild(g);
   });
 
   var ac = document.createElement('button'); ac.className = 'add-category-btn'; ac.textContent = '+ 新建分类'; ac.onclick = addCat; c.appendChild(ac);
   if (edit) { var ab = document.createElement('button'); ab.className = 'add-category-btn'; ab.textContent = '🔑 管理员配置'; ab.onclick = function() { openAdmin('config'); }; c.appendChild(ab); }
+  var allCollapsed = used.every(function(cat) { return collapsedCats.indexOf(cat) > -1; });
+  var tb = document.createElement('button'); tb.className = 'add-category-btn'; tb.textContent = allCollapsed ? '▽ 展开全部分类' : '△ 折叠全部分类'; tb.style.display = 'flex';
+  tb.onclick = function() {
+    var cc = [];
+    if (!allCollapsed) { used.forEach(function(cat) { cc.push(cat); }); }
+    localStorage.setItem('kai_collapsed', JSON.stringify(cc));
+    render();
+  };
+  c.appendChild(tb);
 }
 
 var catCb = null, cfCb = null;
@@ -953,7 +1272,9 @@ function delCat(name) {
   confirm('删除分类', cnt ? '分类「' + name + '」下有 ' + cnt + ' 个网站，确定删除？' : '确定删除分类「' + name + '」？', function(ok) {
     if (!ok) return; D.sites = D.sites.filter(function(s) { return s.category !== name; });
     D.categories = D.categories.filter(function(c) { return c !== name; });
-    D.categoryOrder = (D.categoryOrder || []).filter(function(c) { return c !== name; }); push(); render();
+    D.categoryOrder = (D.categoryOrder || []).filter(function(c) { return c !== name; });
+    var cc = JSON.parse(localStorage.getItem('kai_collapsed') || '[]'); cc = cc.filter(function(c) { return c !== name; }); localStorage.setItem('kai_collapsed', JSON.stringify(cc));
+    push(); render();
   });
 }
 
@@ -964,8 +1285,8 @@ function confirm(title, msg, cb) { $('confirmTitle').textContent = title; $('con
 function closeConfirm(r) { $('confirmOverlay').classList.remove('active'); if (cfCb) cfCb(r); cfCb = null; }
 
 function toast(msg) {
-  var t = $('toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--accent-fg);padding:10px 24px;border-radius:10px;font-size:14px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;'; document.body.appendChild(t); }
-  t.textContent = msg; t.style.opacity = '1'; setTimeout(function() { t.style.opacity = '0'; }, 2000);
+  var t = $('toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-12px);background:var(--fg);color:var(--accent-fg);padding:10px 24px;border-radius:10px;font-size:14px;z-index:999;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,0.15);'; document.body.appendChild(t); }
+  t.textContent = msg; t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)'; clearTimeout(t._timer); t._timer = setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-12px)'; }, 2000);
 }
 
 function fillCats(sel) {
@@ -1012,9 +1333,9 @@ function onUrlInput() {
 
 function saveSite() {
   var url = $('siteUrl').value.trim(), name = $('siteName').value.trim(), desc = $('siteDesc').value.trim(), cat = $('siteCategory').value;
-  if (!url) { alert('请输入网站地址'); return; } if (!name) { alert('请输入网站名称'); return; }
+  if (!url) { toast('请输入网站地址'); return; } if (!name) { toast('请输入网站名称'); return; }
   if (editIdx >= 0) { D.sites[editIdx].name = name; D.sites[editIdx].desc = desc; D.sites[editIdx].category = cat; if (logoUrl) D.sites[editIdx].favicon = logoUrl; }
-  else { if (D.sites.some(function(s) { return s.url === url; })) { alert('该网站已存在'); return; } D.sites.push({ name: name, url: url, desc: desc || '', category: cat, favicon: logoUrl || '' }); }
+  else { if (D.sites.some(function(s) { return s.url === url; })) { toast('该网站已存在'); return; } D.sites.push({ name: name, url: url, desc: desc || '', category: cat, favicon: logoUrl || '' }); }
   closeModal(); push(); render();
 }
 
@@ -1031,6 +1352,7 @@ function openAdmin(mode) {
     $('adminTokenGroup').style.display = 'block'; $('adminTokenInput').value = token;
     $('adminRepoGroup').style.display = 'block'; $('repoInfoInput').value = repo;
     $('otaUpgradeGroup').style.display = 'block'; $('otaCurVer').textContent = 'v' + VER; $('otaNewVer').textContent = '';
+    $('dataIoGroup').style.display = 'block';
   }
   $('adminOverlay').classList.add('active'); $('adminSaveBtn').textContent = mode === 'login' ? '验证' : '保存';
   setTimeout(function() { (mode === 'login' ? $('adminPwdInput') : $('adminNewPwdInput')).focus(); }, 100);
@@ -1079,6 +1401,29 @@ function onOtaFileSelect(input) {
   });
 }
 
+function exportData() {
+  var blob = new Blob([JSON.stringify(D, null, 2)], { type: 'application/json' });
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'kai-nav-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); URL.revokeObjectURL(a.href); toast('数据已导出');
+}
+
+function importData(input) {
+  var file = input.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (!data.categories || !data.sites) { toast('无效的数据文件'); return; }
+      confirm('导入数据', '导入将覆盖当前所有数据，确定？', function(ok) {
+        if (!ok) { input.value = ''; return; }
+        D = data; push(); render(); toast('数据导入成功'); closeAdminModal();
+      });
+    } catch(err) { toast('文件解析失败'); }
+  };
+  reader.readAsText(file); input.value = '';
+}
+
 function enterEdit() { edit = true; document.body.classList.add('edit-mode'); $('settingsBtn').textContent = '✓'; $('settingsBtn').title = '完成编辑'; $('adminBtn').style.display = 'flex'; render(); }
 
 $('settingsBtn').addEventListener('click', function() {
@@ -1092,16 +1437,65 @@ $('modalOverlay').addEventListener('click', function(e) { if (e.target === this)
 $('catModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeCatModal(); });
 $('confirmOverlay').addEventListener('click', function(e) { if (e.target === this) closeConfirm(false); });
 $('adminOverlay').addEventListener('click', function(e) { if (e.target === this) closeAdminModal(); });
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeModal(); closeCatModal(); closeConfirm(false); closeAdminModal(); } });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeModal(); closeCatModal(); closeConfirm(false); closeAdminModal(); } if ((e.key === '/' && !e.ctrlKey && !e.metaKey) || (e.key === 'k' && (e.ctrlKey || e.metaKey))) { if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'SELECT') { e.preventDefault(); $('searchInput').focus(); } } });
 
 var engines = { baidu: { action: 'https://www.baidu.com/s', param: 'wd' }, google: { action: 'https://www.google.com/search', param: 'q' }, bing: { action: 'https://www.bing.com/search', param: 'q' } };
-function switchEngine(e) { var f = $('searchForm'); f.action = engines[e].action; var i = $('searchInput'); i.name = engines[e].param; i.placeholder = { baidu: '搜索你想要的内容...', google: 'Search with Google...', bing: 'Search with Bing...' }[e]; }
+function switchEngine(e) { var f = $('searchForm'); f.action = engines[e].action; var i = $('searchInput'); i.name = engines[e].param; i.placeholder = { baidu: '搜索你想要的内容...', google: 'Search with Google...', bing: 'Search with Bing...' }[e]; localStorage.setItem('kai_engine', e); }
+
+(function() {
+  var saved = localStorage.getItem('kai_engine');
+  if (saved && engines[saved]) {
+    var radio = document.querySelector('input[name="engine"][value="' + saved + '"]');
+    if (radio) { radio.checked = true; switchEngine(saved); }
+  }
+})();
+
+var filterTimer = null;
+function clearSearch() { $('searchInput').value = ''; $('searchInput').dispatchEvent(new Event('input')); $('searchClear').classList.remove('visible'); $('searchInput').focus(); }
+$('searchInput').addEventListener('input', function() {
+  $('searchClear').classList.toggle('visible', this.value.length > 0);
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(function() {
+    var q = $('searchInput').value.trim().toLowerCase();
+    var cards = document.querySelectorAll('.nav-card');
+    var groups = document.querySelectorAll('.nav-group');
+    if (!q) {
+      cards.forEach(function(c) { c.classList.remove('hidden'); var n = c.querySelector('.name'); if (n) n.innerHTML = n.textContent; });
+      groups.forEach(function(g) { g.style.display = ''; });
+      return;
+    }
+    groups.forEach(function(g) {
+      var hasVisible = false;
+      g.querySelectorAll('.nav-card').forEach(function(c) {
+        var name = c.querySelector('.name');
+        var desc = c.querySelector('.desc');
+        var siteName = name ? name.textContent.toLowerCase() : '';
+        var siteDesc = desc ? desc.textContent.toLowerCase() : '';
+        if (siteName.indexOf(q) > -1 || siteDesc.indexOf(q) > -1) {
+          c.classList.remove('hidden');
+          hasVisible = true;
+          if (name && siteName.indexOf(q) > -1) {
+            var re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+            name.innerHTML = name.textContent.replace(re, '<mark>$1</mark>');
+          } else if (name) { name.innerHTML = name.textContent; }
+        } else {
+          c.classList.add('hidden');
+          if (name) name.innerHTML = name.textContent;
+        }
+      });
+      g.style.display = hasVisible ? '' : 'none';
+    });
+  }, 150);
+});
 
 function updateClock() {
   var n = new Date();
-  $('clock').textContent = String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
+  var h = n.getHours();
+  $('clock').textContent = String(h).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0') + ':' + String(n.getSeconds()).padStart(2, '0');
   var w = ['日','一','二','三','四','五','六'];
   $('dateStr').textContent = n.getFullYear() + '年' + (n.getMonth()+1) + '月' + n.getDate() + '日 星期' + w[n.getDay()];
+  var g = h < 6 ? '夜深了，注意休息 🌙' : h < 9 ? '早上好 ☀️' : h < 12 ? '上午好 🌤️' : h < 14 ? '中午好 🌞' : h < 18 ? '下午好 🌅' : h < 22 ? '晚上好 🌆' : '夜深了，注意休息 🌙';
+  $('greeting').textContent = g;
 }
 updateClock(); setInterval(updateClock, 1000);
 
@@ -1136,6 +1530,22 @@ updateClock(); setInterval(updateClock, 1000);
 })();
 
 var fallback = {"categories":["常用工具","开发资源","社交媒体","学习教育","效率工具","自定义"],"categoryOrder":[],"sites":[{"name":"百度","url":"https://www.baidu.com","desc":"搜索引擎","category":"常用工具","emoji":"🔍","emojiBg":"#F1F5F9","emojiColor":"#0052FF"},{"name":"Google 翻译","url":"https://translate.google.com","desc":"多语言翻译","category":"常用工具","emoji":"🌐","emojiBg":"#EEF2FF","emojiColor":"#4F46E5"},{"name":"Notion","url":"https://www.notion.so","desc":"笔记与协作","category":"常用工具","emoji":"📝","emojiBg":"#F0FDF4","emojiColor":"#16A34A"},{"name":"ChatGPT","url":"https://chat.openai.com","desc":"AI 对话助手","category":"常用工具","emoji":"🤖","emojiBg":"#F0F9FF","emojiColor":"#0284C7"},{"name":"Canva","url":"https://www.canva.cn","desc":"在线设计","category":"常用工具","emoji":"🎨","emojiBg":"#FFF7ED","emojiColor":"#EA580C"},{"name":"GitHub","url":"https://github.com","desc":"代码托管","category":"开发资源","emoji":"🐙","emojiBg":"#F1F5F9","emojiColor":"#0F172A"},{"name":"StackOverflow","url":"https://stackoverflow.com","desc":"技术问答","category":"开发资源","emoji":"📚","emojiBg":"#FFF7ED","emojiColor":"#F59E0B"},{"name":"MDN","url":"https://developer.mozilla.org","desc":"Web 开发文档","category":"开发资源","emoji":"📖","emojiBg":"#EEF2FF","emojiColor":"#4F46E5"},{"name":"CodePen","url":"https://codepen.io","desc":"在线代码编辑","category":"开发资源","emoji":"✏️","emojiBg":"#F0FDF4","emojiColor":"#16A34A"},{"name":"npm","url":"https://www.npmjs.com","desc":"包管理器","category":"开发资源","emoji":"📦","emojiBg":"#F1F5F9","emojiColor":"#CB3837"},{"name":"微博","url":"https://weibo.com","desc":"社交平台","category":"社交媒体","emoji":"📢","emojiBg":"#FFF1F2","emojiColor":"#E11D48"},{"name":"知乎","url":"https://www.zhihu.com","desc":"知识社区","category":"社交媒体","emoji":"💡","emojiBg":"#EEF2FF","emojiColor":"#0066FF"},{"name":"哔哩哔哩","url":"https://www.bilibili.com","desc":"视频社区","category":"社交媒体","emoji":"🎬","emojiBg":"#F0F9FF","emojiColor":"#00A1D6"},{"name":"Twitter","url":"https://twitter.com","desc":"全球社交","category":"社交媒体","emoji":"🐦","emojiBg":"#F0F9FF","emojiColor":"#1D9BF0"},{"name":"YouTube","url":"https://www.youtube.com","desc":"全球视频","category":"社交媒体","emoji":"▶️","emojiBg":"#FFF7ED","emojiColor":"#FF0000"},{"name":"Coursera","url":"https://www.coursera.org","desc":"在线课程","category":"学习教育","emoji":"🎓","emojiBg":"#EEF2FF","emojiColor":"#0056D2"},{"name":"中国大学MOOC","url":"https://www.icourse163.org","desc":"国内课程","category":"学习教育","emoji":"🏫","emojiBg":"#F0FDF4","emojiColor":"#C41230"},{"name":"力扣","url":"https://leetcode.cn","desc":"算法练习","category":"学习教育","emoji":"🧩","emojiBg":"#FFF7ED","emojiColor":"#FFA116"},{"name":"W3Schools","url":"https://www.w3schools.com","desc":"Web 教程","category":"学习教育","emoji":"💻","emojiBg":"#F0FDF4","emojiColor":"#04AA6D"},{"name":"Gmail","url":"https://mail.google.com","desc":"邮件服务","category":"效率工具","emoji":"✉️","emojiBg":"#FFF7ED","emojiColor":"#EA4335"},{"name":"Google Drive","url":"https://drive.google.com","desc":"云存储","category":"效率工具","emoji":"📁","emojiBg":"#EEF2FF","emojiColor":"#4285F4"},{"name":"Figma","url":"https://www.figma.com","desc":"设计协作","category":"效率工具","emoji":"🎯","emojiBg":"#FFF1F2","emojiColor":"#A259FF"},{"name":"Excalidraw","url":"https://excalidraw.com","desc":"手绘白板","category":"效率工具","emoji":"✍️","emojiBg":"#F0FDF4","emojiColor":"#6965DB"}]};
+
+(function() {
+  var saved = localStorage.getItem('kai_theme');
+  if (saved === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); $('themeBtn').textContent = '☀️'; }
+})();
+$('themeBtn').addEventListener('click', function() {
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('kai_theme', 'light'); this.textContent = '🌙'; } 
+  else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('kai_theme', 'dark'); this.textContent = '☀️'; }
+});
+
+window.addEventListener('scroll', function() {
+  var btn = $('backTop');
+  if (window.scrollY > 300) btn.classList.add('visible'); else btn.classList.remove('visible');
+});
+$('backTop').addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
 function init() {
   var done = function() { render(); $('searchInput').focus(); };

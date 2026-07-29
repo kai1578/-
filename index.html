@@ -1090,7 +1090,7 @@ var repo = localStorage.getItem('kai_repo') || '';
 var sha = '', pushTimer = null;
 var pwdHash = localStorage.getItem('kai_pwd') || '';
 var adminMode = '';
-var VER = '1.0.0';
+var VER = '1.3.1';
 
 
 function hash(s) { var h = 0; for (var i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0; return 'h' + Math.abs(h).toString(36); }
@@ -1164,11 +1164,16 @@ function render() {
       var gridEl = g.querySelector('.nav-grid');
       if (g.classList.contains('collapsed')) {
         g.classList.remove('collapsed');
-        gridEl.style.maxHeight = gridEl.scrollHeight + 'px';
+        gridEl.style.maxHeight = 'none';
+        var h = gridEl.scrollHeight;
+        gridEl.style.maxHeight = '0px';
+        gridEl.offsetHeight;
+        gridEl.style.maxHeight = h + 'px';
         gridEl.style.opacity = '1';
         setTimeout(function() { gridEl.style.maxHeight = 'none'; }, 360);
       } else {
-        gridEl.style.maxHeight = gridEl.scrollHeight + 'px';
+        var h = gridEl.scrollHeight;
+        gridEl.style.maxHeight = h + 'px';
         gridEl.offsetHeight;
         gridEl.style.maxHeight = '0px';
         gridEl.style.opacity = '0';
@@ -1255,18 +1260,18 @@ var catCb = null, cfCb = null;
 
 function moveCat(name, dir) {
   var co = D.categoryOrder || [];
-  if (!co.length) { D.categories.forEach(function(c) { if (co.indexOf(c) === -1) co.push(c); }); D.categoryOrder = co; }
+  D.categories.forEach(function(c) { if (co.indexOf(c) === -1) co.push(c); });
+  D.categoryOrder = co;
   var usedCats = [];
-  D.sites.forEach(function(s) { if (D.categories.indexOf(s.category) !== -1 && usedCats.indexOf(s.category) === -1) usedCats.push(s.category); });
-  usedCats.sort(function(a, b) { var ai = co.indexOf(a), bi = co.indexOf(b); if (ai < 0 && bi < 0) return 0; if (ai < 0) return 1; if (bi < 0) return -1; return ai - bi; });
-  var i = usedCats.indexOf(name); if (i < 0) return; var ni = i + dir; if (ni < 0 || ni >= usedCats.length) return;
-  var targetName = usedCats[ni];
-  var ai = co.indexOf(name), bi = co.indexOf(targetName);
-  if (ai < 0 || bi < 0) return;
-  co.splice(ai, 1);
-  var newBi = co.indexOf(targetName);
-  if (dir < 0) co.splice(newBi, 0, name); else co.splice(newBi + 1, 0, name);
-  D.categoryOrder = co; push(); render();
+  D.sites.forEach(function(s) { if (co.indexOf(s.category) !== -1 && usedCats.indexOf(s.category) === -1) usedCats.push(s.category); });
+  usedCats.sort(function(a, b) { return co.indexOf(a) - co.indexOf(b); });
+  var i = usedCats.indexOf(name);
+  if (i < 0) return;
+  var ni = i + dir;
+  if (ni < 0 || ni >= usedCats.length) return;
+  var aIdx = co.indexOf(name), bIdx = co.indexOf(usedCats[ni]);
+  var tmp = co[aIdx]; co[aIdx] = co[bIdx]; co[bIdx] = tmp;
+  push(); render();
 }
 
 function addCat() {

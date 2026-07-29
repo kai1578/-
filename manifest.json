@@ -1,0 +1,16 @@
+{
+  "name": "凯 · 个人导航站",
+  "short_name": "凯导航",
+  "description": "轻量级个人导航首页",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#FAFAFA",
+  "theme_color": "#0052FF",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230052FF'/><text x='50' y='68' font-size='55' font-weight='bold' fill='white' text-anchor='middle' font-family='sans-serif'>凯</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

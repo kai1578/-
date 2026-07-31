@@ -288,6 +288,13 @@
       "desc": "",
       "category": "机械设计资料",
       "favicon": ""
+    },
+    {
+      "name": "gpt",
+      "url": "https://chatgpt.com/",
+      "desc": "",
+      "category": "常用工具",
+      "favicon": ""
     }
   ]
 }

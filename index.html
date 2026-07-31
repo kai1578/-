@@ -1223,6 +1223,66 @@ footer {
 .bg-speed-fast { background: var(--success); }
 .bg-speed-medium { background: var(--warning); }
 .bg-speed-slow { background: var(--danger); }
+
+/* ===== 飞牛 NAS 管理样式 ===== */
+.bg-source-nas { background: rgba(16,185,129,0.12); color: var(--success); }
+
+.nas-item {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--muted);
+  margin-bottom: 10px;
+  transition: all var(--transition);
+}
+
+.nas-item:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); }
+.nas-item.nas-default { border-color: var(--success); border-width: 2px; }
+
+.nas-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.nas-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nas-item-actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.nas-item-url {
+  font-size: 12px;
+  color: var(--muted-fg);
+  word-break: break-all;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.nas-priority-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.nas-priority-list .bg-source-badge {
+  font-size: 11px;
+  padding: 4px 8px;
+}
 </style>
 </head>
 <body>
@@ -1349,6 +1409,7 @@ footer {
       <button class="sys-tab" data-tab="data" onclick="App.UI.switchSysTab('data')">数据管理</button>
       <button class="sys-tab" data-tab="icons" onclick="App.UI.switchSysTab('icons')">图标管理</button>
       <button class="sys-tab" data-tab="background" onclick="App.UI.switchSysTab('background')">背景管理</button>
+      <button class="sys-tab" data-tab="nas" onclick="App.UI.switchSysTab('nas')">飞牛 NAS</button>
       <button class="sys-tab" data-tab="version" onclick="App.UI.switchSysTab('version')">版本管理</button>
       <button class="sys-tab" data-tab="github" onclick="App.UI.switchSysTab('github')">GitHub 配置</button>
     </div>
@@ -1457,6 +1518,48 @@ footer {
       </div>
     </div>
 
+    <!-- 飞牛 NAS 管理 -->
+    <div class="sys-panel" id="panel-nas">
+      <div class="sys-field">
+        <label>飞牛 NAS 配置列表</label>
+        <div id="nasListContainer"></div>
+      </div>
+
+      <div class="sys-btn-row">
+        <button class="sys-btn sys-btn-primary" onclick="App.FnNasManager.addUI()">+ 添加飞牛 NAS</button>
+      </div>
+
+      <div class="sys-field" style="margin-top:20px;">
+        <label>NAS 图片浏览</label>
+        <div class="sys-hint">选择上方已添加的 NAS，点击「浏览」查看 /backgrounds/ 目录中的图片</div>
+        <div class="bg-preview-grid" id="nasBrowseGrid">
+          <div style="text-align:center;color:var(--muted-fg);font-size:13px;padding:20px;grid-column:1/-1;">点击 NAS 配置的「浏览」按钮查看图片</div>
+        </div>
+      </div>
+
+      <div class="sys-field">
+        <label>快速添加 NAS 图片地址</label>
+        <input type="url" id="nasQuickUrlInput" placeholder="https://nas.example.com/photos/bg001.webp 或 WebDAV 地址">
+        <div class="sys-btn-row" style="margin-top:8px;">
+          <button class="sys-btn sys-btn-secondary" onclick="App.FnNasManager.addUrlToBackground(App.Utils.$('nasQuickUrlInput').value)">解析并添加</button>
+        </div>
+        <div class="sys-hint">支持 HTTP/HTTPS 直链、WebDAV 地址、飞牛 NAS 分享链接（自动解析）</div>
+      </div>
+
+      <div class="sys-field">
+        <label>来源优先级</label>
+        <div class="sys-hint">页面加载背景时按以下优先级自动选择来源：</div>
+        <div class="nas-priority-list">
+          <span class="bg-source-badge bg-source-nas">1. 飞牛 NAS</span>
+          <span class="bg-source-badge bg-source-custom">2. 自定义 CDN</span>
+          <span class="bg-source-badge bg-source-github">3. GitHub Pages</span>
+          <span class="bg-source-badge bg-source-github">4. 本地</span>
+          <span class="bg-source-badge bg-source-custom">5. 默认</span>
+        </div>
+        <div class="sys-hint">若高优先级来源离线/超时，自动切换到下一来源，不影响用户体验</div>
+      </div>
+    </div>
+
     <!-- 版本管理 -->
     <div class="sys-panel" id="panel-version">
       <div class="ver-info">
@@ -1535,8 +1638,53 @@ footer {
   </div>
 </div>
 
+<!-- 飞牛 NAS 编辑弹窗 -->
+<div class="modal-overlay" id="nasEditOverlay">
+  <div class="modal" style="max-width:520px;">
+    <h2 id="nasEditTitle">添加飞牛 NAS</h2>
+    <input type="hidden" id="nasEditId">
+    <div class="form-group">
+      <label>NAS 名称</label>
+      <input type="text" id="nasNameInput" placeholder="如：我的飞牛 NAS">
+    </div>
+    <div class="form-group">
+      <label>HTTP/HTTPS 基础地址</label>
+      <input type="url" id="nasBaseUrlInput" placeholder="https://nas.example.com">
+      <div class="sys-hint">飞牛 NAS 的访问地址，用于直链图片和目录浏览</div>
+    </div>
+    <div class="form-group">
+      <label>WebDAV 地址（可选）</label>
+      <input type="url" id="nasWebdavInput" placeholder="https://nas.example.com:5006/dav">
+      <div class="sys-hint">WebDAV 服务地址，用于目录浏览和文件管理</div>
+    </div>
+    <div class="form-group">
+      <label>WebDAV 用户名（可选）</label>
+      <input type="text" id="nasUsernameInput" placeholder="WebDAV 用户名">
+    </div>
+    <div class="form-group">
+      <label>WebDAV 密码（可选）</label>
+      <input type="password" id="nasPasswordInput" placeholder="WebDAV 密码">
+    </div>
+    <div class="form-group">
+      <label>背景图片目录路径</label>
+      <input type="text" id="nasBgPathInput" placeholder="/backgrounds/">
+      <div class="sys-hint">NAS 上存放背景图片的目录路径</div>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="nasDefaultCheck" style="width:auto;height:auto;">
+        设为默认 NAS
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="App.FnNasManager.closeEdit()">取消</button>
+      <button class="btn-save" onclick="App.FnNasManager.saveEdit()">保存</button>
+    </div>
+  </div>
+</div>
+
 <script>
-var VER = '2.1.0';
+var VER = '2.2.0';
 
 /* ===== App 命名空间 ===== */
 var App = {};
@@ -1724,44 +1872,70 @@ App.FileManager = {
 App.ImageSourceDetector = {
   _cache: {},
   _cacheKey: 'kai_img_speed_cache',
+  _CACHE_TTL: 86400000,
 
   init: function() {
     try { this._cache = JSON.parse(localStorage.getItem(this._cacheKey) || '{}'); }
     catch (e) { this._cache = {}; }
+    this._cleanExpiredCache();
+  },
+
+  _cleanExpiredCache: function() {
+    var now = Date.now();
+    var changed = false;
+    for (var k in this._cache) {
+      if (this._cache[k] && (now - this._cache[k].time > this._CACHE_TTL)) {
+        delete this._cache[k];
+        changed = true;
+      }
+    }
+    if (changed) {
+      try { localStorage.setItem(this._cacheKey, JSON.stringify(this._cache)); } catch (e) {}
+    }
   },
 
   detectSource: function(url) {
     if (!url) return 'unknown';
+    var nasList = App.FnNasManager ? App.FnNasManager.getNasList() : [];
+    for (var i = 0; i < nasList.length; i++) {
+      if (url.indexOf(nasList[i].baseUrl) === 0) return 'nas';
+    }
+    if (url.indexOf('/dav/') > -1 || url.indexOf(':5006') > -1) return 'nas';
     if (url.indexOf('github.io') > -1 || url.indexOf('githubusercontent.com') > -1) return 'github';
-    if (url.indexOf('myhuaweicloud.com') > -1 || url.indexOf('obs.') > -1) return 'obs';
+    if (url.indexOf('myhuaweicloud.com') > -1 || url.indexOf('obs.') > -1 || url.indexOf('cdn.') > -1) return 'cdn';
     if (url.indexOf('https://') === 0) return 'custom';
     if (url.indexOf('icons/') === 0 || url.indexOf('backgrounds/') === 0) return 'local';
     return 'unknown';
   },
 
+  getSourcePriority: function(source) {
+    var priorities = { nas: 0, cdn: 1, github: 2, local: 3, custom: 4, unknown: 5 };
+    return priorities[source] !== undefined ? priorities[source] : 5;
+  },
+
   measureSpeed: function(url) {
     var self = this;
     var cacheKey = App.Utils.hash(url);
-    if (self._cache[cacheKey] && (Date.now() - self._cache[cacheKey].time < 300000)) {
+    if (self._cache[cacheKey] && (Date.now() - self._cache[cacheKey].time < self._CACHE_TTL)) {
       return Promise.resolve(self._cache[cacheKey].speed);
     }
     return new Promise(function(resolve) {
       var start = performance.now();
       var img = new Image();
       var done = false;
-      var finish = function(speed) {
+      var finish = function(speed, elapsed) {
         if (done) return;
         done = true;
-        self._cache[cacheKey] = { speed: speed, time: Date.now() };
+        self._cache[cacheKey] = { speed: speed, time: Date.now(), elapsed: elapsed || 0 };
         try { localStorage.setItem(self._cacheKey, JSON.stringify(self._cache)); } catch (e) {}
         resolve(speed);
       };
       img.onload = function() {
         var elapsed = performance.now() - start;
-        finish(elapsed < 200 ? 'fast' : elapsed < 800 ? 'medium' : 'slow');
+        finish(elapsed < 200 ? 'fast' : elapsed < 800 ? 'medium' : 'slow', elapsed);
       };
       img.onerror = function() { finish('error'); };
-      setTimeout(function() { finish('timeout'); }, 3000);
+      setTimeout(function() { finish('timeout'); }, 5000);
       img.src = url + (url.indexOf('?') > -1 ? '&' : '?') + '_t=' + Date.now();
     });
   },
@@ -1769,7 +1943,10 @@ App.ImageSourceDetector = {
   batchMeasure: function(urls) {
     var self = this;
     return Promise.all(urls.map(function(u) {
-      return self.measureSpeed(u).then(function(speed) { return { url: u, speed: speed, source: self.detectSource(u) }; });
+      return self.measureSpeed(u).then(function(speed) {
+        var cached = self._cache[App.Utils.hash(u)];
+        return { url: u, speed: speed, source: self.detectSource(u), elapsed: cached ? cached.elapsed : 0 };
+      });
     }));
   },
 
@@ -1787,6 +1964,38 @@ App.ImageSourceDetector = {
     });
   },
 
+  selectByPriority: function(urls) {
+    var self = this;
+    return self.batchMeasure(urls).then(function(results) {
+      var available = results.filter(function(r) { return r.speed === 'fast' || r.speed === 'medium' || r.speed === 'slow'; });
+      if (available.length === 0) return null;
+      available.sort(function(a, b) {
+        var pa = self.getSourcePriority(a.source);
+        var pb = self.getSourcePriority(b.source);
+        if (pa !== pb) return pa - pb;
+        var order = { fast: 0, medium: 1, slow: 2 };
+        return order[a.speed] - order[b.speed];
+      });
+      return available[0].url;
+    });
+  },
+
+  failover: function(urlCandidates) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      var tryNext = function(idx) {
+        if (idx >= urlCandidates.length) { reject(new Error('所有来源均不可用')); return; }
+        var candidate = urlCandidates[idx];
+        self.preload(candidate.url).then(function() {
+          resolve({ url: candidate.url, source: candidate.source, index: idx });
+        }).catch(function() {
+          tryNext(idx + 1);
+        });
+      };
+      tryNext(0);
+    });
+  },
+
   getSpeedClass: function(speed) {
     return { fast: 'bg-speed-fast', medium: 'bg-speed-medium', slow: 'bg-speed-slow', error: 'bg-speed-slow', timeout: 'bg-speed-slow' }[speed] || 'bg-speed-slow';
   },
@@ -1795,7 +2004,19 @@ App.ImageSourceDetector = {
     return new Promise(function(resolve, reject) {
       var img = new Image();
       img.onload = function() { resolve(img); };
-      img.onerror = reject;
+      img.onerror = function() { reject(new Error('preload failed: ' + url)); };
+      img.src = url;
+    });
+  },
+
+  getImageInfo: function(url) {
+    return new Promise(function(resolve, reject) {
+      var img = new Image();
+      img.onload = function() {
+        resolve({ url: url, width: img.naturalWidth, height: img.naturalHeight, ok: true });
+      };
+      img.onerror = function() { reject(new Error('无法加载图片')); };
+      setTimeout(function() { reject(new Error('加载超时')); }, 5000);
       img.src = url;
     });
   }
@@ -1943,6 +2164,471 @@ App.BaiduImageParser = {
   }
 };
 
+/* ===== App.FnNasManager - 飞牛 NAS 图片来源管理 ===== */
+App.FnNasManager = {
+  _nasList: [],
+  _storageKey: 'kai_fn_nas_list',
+  _browseCache: {},
+
+  init: function() {
+    try { this._nasList = JSON.parse(localStorage.getItem(this._storageKey) || '[]'); }
+    catch (e) { this._nasList = []; }
+  },
+
+  getNasList: function() { return this._nasList; },
+
+  _save: function() {
+    localStorage.setItem(this._storageKey, JSON.stringify(this._nasList));
+  },
+
+  _genId: function() { return 'nas_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6); },
+
+  addNas: function(config) {
+    var nas = {
+      id: this._genId(),
+      name: config.name || '飞牛 NAS',
+      baseUrl: config.baseUrl || '',
+      webdavUrl: config.webdavUrl || '',
+      username: config.username || '',
+      password: config.password || '',
+      bgPath: config.bgPath || '/backgrounds/',
+      isDefault: config.isDefault || false
+    };
+    if (nas.isDefault) {
+      this._nasList.forEach(function(n) { n.isDefault = false; });
+    }
+    this._nasList.push(nas);
+    this._save();
+    return nas;
+  },
+
+  editNas: function(id, config) {
+    var nas = this._nasList.find(function(n) { return n.id === id; });
+    if (!nas) return null;
+    Object.keys(config).forEach(function(k) { if (config[k] !== undefined) nas[k] = config[k]; });
+    if (config.isDefault) {
+      this._nasList.forEach(function(n) { if (n.id !== id) n.isDefault = false; });
+    }
+    this._save();
+    return nas;
+  },
+
+  deleteNas: function(id) {
+    this._nasList = this._nasList.filter(function(n) { return n.id !== id; });
+    this._save();
+  },
+
+  getNas: function(id) {
+    return this._nasList.find(function(n) { return n.id === id; });
+  },
+
+  getDefaultNas: function() {
+    var def = this._nasList.find(function(n) { return n.isDefault; });
+    return def || this._nasList[0] || null;
+  },
+
+  normalizeUrl: function(url) {
+    if (!url) return '';
+    url = url.trim();
+    if (!/^https?:\/\//i.test(url)) url = 'http://' + url;
+    return url;
+  },
+
+  isImageUrl: function(url) {
+    return /\.(jpg|jpeg|png|webp|avif|gif|bmp|svg)$/i.test(url);
+  },
+
+  parseUrl: function(url) {
+    var self = this;
+    url = self.normalizeUrl(url);
+    var result = { url: url, valid: false, isImage: false, accessible: false, source: 'nas', width: 0, height: 0, error: '' };
+
+    if (!/^https?:\/\/.+/.test(url)) {
+      result.error = '链接不合法';
+      return Promise.resolve(result);
+    }
+    result.valid = true;
+
+    if (!self.isImageUrl(url)) {
+      var shareParsed = self._parseShareUrl(url);
+      if (shareParsed) {
+        url = shareParsed;
+        result.url = url;
+      } else {
+        result.error = '非图片地址且无法解析为图片直链';
+        return Promise.resolve(result);
+      }
+    }
+    result.isImage = true;
+
+    return App.ImageSourceDetector.getImageInfo(url).then(function(info) {
+      result.accessible = true;
+      result.width = info.width;
+      result.height = info.height;
+      return result;
+    }).catch(function(e) {
+      result.error = e.message || '图片无法访问';
+      return result;
+    });
+  },
+
+  _parseShareUrl: function(url) {
+    var patterns = [
+      /[?&]path=([^&]+)/,
+      /[?&]file=([^&]+)/,
+      /[?&]url=([^&]+)/,
+      /\/share\/([^/]+)\/(.+)/
+    ];
+    for (var i = 0; i < patterns.length; i++) {
+      var m = url.match(patterns[i]);
+      if (m && m[1]) {
+        try {
+          var decoded = decodeURIComponent(m[1]);
+          if (m[2]) decoded += '/' + decodeURIComponent(m[2]);
+          if (self.isImageUrl(decoded)) return decoded;
+          var base = url.match(/^(https?:\/\/[^/]+)/);
+          if (base && self.isImageUrl(base[1] + decoded)) return base[1] + decoded;
+        } catch (e) {}
+      }
+    }
+    return '';
+  },
+
+  testConnection: function(id) {
+    var self = this;
+    var nas = self.getNas(id);
+    if (!nas) return Promise.reject(new Error('NAS 不存在'));
+    var testUrl = nas.baseUrl || nas.webdavUrl;
+    if (!testUrl) return Promise.reject(new Error('未配置地址'));
+
+    return new Promise(function(resolve, reject) {
+      var start = performance.now();
+      fetch(testUrl, { method: 'HEAD', mode: 'no-cors' }).then(function() {
+        var elapsed = Math.round(performance.now() - start);
+        resolve({ ok: true, elapsed: elapsed, message: '连接成功 (' + elapsed + 'ms)' });
+      }).catch(function() {
+        var img = new Image();
+        img.onload = function() {
+          var elapsed = Math.round(performance.now() - start);
+          resolve({ ok: true, elapsed: elapsed, message: '连接成功 (' + elapsed + 'ms)' });
+        };
+        img.onerror = function() {
+          reject(new Error('连接失败，请检查地址或网络'));
+        };
+        setTimeout(function() { reject(new Error('连接超时')); }, 5000);
+        img.src = testUrl + (testUrl.indexOf('?') > -1 ? '&' : '?') + '_t=' + Date.now();
+      });
+    });
+  },
+
+  browseDir: function(id, path) {
+    var self = this;
+    var nas = self.getNas(id);
+    if (!nas) return Promise.reject(new Error('NAS 不存在'));
+    var dirPath = path || nas.bgPath || '/backgrounds/';
+    var baseUrl = nas.baseUrl || nas.webdavUrl;
+    if (!baseUrl) return Promise.reject(new Error('未配置地址'));
+
+    var browseUrl = baseUrl.replace(/\/$/, '') + dirPath;
+    var cacheKey = id + ':' + dirPath;
+    if (self._browseCache[cacheKey]) {
+      return Promise.resolve(self._browseCache[cacheKey]);
+    }
+
+    return new Promise(function(resolve, reject) {
+      fetch(browseUrl).then(function(r) { return r.text(); }).then(function(html) {
+        var images = self._parseDirListing(html, baseUrl, dirPath);
+        self._browseCache[cacheKey] = images;
+        resolve(images);
+      }).catch(function() {
+        self._browseViaWebDav(nas, dirPath).then(function(images) {
+          self._browseCache[cacheKey] = images;
+          resolve(images);
+        }).catch(function(e) { reject(e); });
+      });
+    });
+  },
+
+  _parseDirListing: function(html, baseUrl, dirPath) {
+    var images = [];
+    var linkRegex = /<a[^>]+href=["']([^"']+)["'][^>]*>([^<]*)<\/a>/gi;
+    var m;
+    while ((m = linkRegex.exec(html)) !== null) {
+      var href = m[1];
+      var name = m[2] || href;
+      try { href = decodeURIComponent(href); } catch (e) {}
+      if (href === '../' || href === '..' || href === '.') continue;
+      if (self.isImageUrl(href)) {
+        var fullUrl;
+        if (/^https?:\/\//.test(href)) fullUrl = href;
+        else if (href.charAt(0) === '/') fullUrl = baseUrl.replace(/^(https?:\/\/[^/]+).*$/, '$1') + href;
+        else fullUrl = baseUrl.replace(/\/$/, '') + dirPath.replace(/\/$/, '') + '/' + href;
+        images.push({ name: name.trim(), url: fullUrl, path: dirPath + href });
+      }
+    }
+    return images;
+  },
+
+  _browseViaWebDav: function(nas, dirPath) {
+    var self = this;
+    var webdavUrl = nas.webdavUrl;
+    if (!webdavUrl) return Promise.reject(new Error('未配置 WebDAV 地址'));
+    var propfindUrl = webdavUrl.replace(/\/$/, '') + dirPath;
+
+    return new Promise(function(resolve, reject) {
+      var headers = { 'Depth': '1', 'Content-Type': 'application/xml' };
+      if (nas.username) {
+        var auth = btoa(nas.username + ':' + nas.password);
+        headers['Authorization'] = 'Basic ' + auth;
+      }
+      var body = '<?xml version="1.0" encoding="utf-8"?><D:propfind xmlns:D="DAV:"><D:prop><D:displayname/><D:getcontentlength/><D:resourcetype/></D:prop></D:propfind>';
+      fetch(propfindUrl, { method: 'PROPFIND', headers: headers, body: body }).then(function(r) { return r.text(); }).then(function(xml) {
+        var images = [];
+        var responseRegex = /<D:response>([\s\S]*?)<\/D:response>/gi;
+        var resp;
+        while ((resp = responseRegex.exec(xml)) !== null) {
+          var respText = resp[1];
+          var hrefMatch = respText.match(/<D:href>([^<]+)<\/D:href>/);
+          var sizeMatch = respText.match(/<D:getcontentlength>([^<]+)<\/D:getcontentlength>/);
+          var isCollection = respText.indexOf('<D:collection') > -1;
+          if (hrefMatch && !isCollection) {
+            var href = hrefMatch[1];
+            try { href = decodeURIComponent(href); } catch (e) {}
+            if (self.isImageUrl(href)) {
+              var fullUrl = webdavUrl.replace(/\/$/, '') + href.replace(/^\/dav/, '');
+              images.push({
+                name: href.split('/').pop(),
+                url: fullUrl,
+                path: href,
+                size: sizeMatch ? parseInt(sizeMatch[1]) : 0
+              });
+            }
+          }
+        }
+        resolve(images);
+      }).catch(function(e) { reject(new Error('WebDAV 浏览失败: ' + (e.message || '未知错误'))); });
+    });
+  },
+
+  syncBackgrounds: function(id) {
+    var self = this;
+    return self.browseDir(id).then(function(images) {
+      var added = 0;
+      images.forEach(function(img) {
+        var exists = App.BackgroundManager._settings.images.some(function(b) { return b.url === img.url; });
+        if (!exists) {
+          App.BackgroundManager._settings.images.push({
+            url: img.url,
+            name: img.name,
+            source: 'nas',
+            nasId: id,
+            size: img.size || 0
+          });
+          added++;
+        }
+      });
+      if (added > 0) {
+        App.BackgroundManager._save();
+        App.BackgroundManager._render();
+        App.BackgroundManager._startCarousel();
+      }
+      return { total: images.length, added: added, skipped: images.length - added };
+    });
+  },
+
+  renderNasList: function() {
+    var $ = App.Utils.$;
+    var container = $('nasListContainer');
+    if (!container) return;
+    var self = this;
+    var list = this._nasList;
+
+    if (list.length === 0) {
+      container.innerHTML = '<div style="text-align:center;color:var(--muted-fg);font-size:13px;padding:20px;">暂无飞牛 NAS 配置，请添加</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+    list.forEach(function(nas) {
+      var item = document.createElement('div');
+      item.className = 'nas-item' + (nas.isDefault ? ' nas-default' : '');
+      item.innerHTML =
+        '<div class="nas-item-header">' +
+          '<span class="nas-item-name">' + App.Utils.esc(nas.name) + (nas.isDefault ? ' <span class="bg-source-badge bg-source-custom">默认</span>' : '') + '</span>' +
+          '<div class="nas-item-actions">' +
+            '<button class="sys-btn sys-btn-secondary" style="flex:0 0 auto;padding:0 10px;height:32px;" onclick="App.FnNasManager.testConnectionUI(\'' + nas.id + '\')">测试</button>' +
+            '<button class="sys-btn sys-btn-secondary" style="flex:0 0 auto;padding:0 10px;height:32px;" onclick="App.FnNasManager.browseUI(\'' + nas.id + '\')">浏览</button>' +
+            '<button class="sys-btn sys-btn-secondary" style="flex:0 0 auto;padding:0 10px;height:32px;" onclick="App.FnNasManager.syncUI(\'' + nas.id + '\')">同步</button>' +
+            '<button class="sys-btn sys-btn-secondary" style="flex:0 0 auto;padding:0 10px;height:32px;" onclick="App.FnNasManager.editUI(\'' + nas.id + '\')">编辑</button>' +
+            '<button class="sys-btn sys-btn-danger" style="flex:0 0 auto;padding:0 10px;height:32px;" onclick="App.FnNasManager.deleteUI(\'' + nas.id + '\')">删除</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="nas-item-url">' + App.Utils.esc(nas.baseUrl || nas.webdavUrl || '未配置') + '</div>' +
+        (nas.webdavUrl ? '<div class="nas-item-url">WebDAV: ' + App.Utils.esc(nas.webdavUrl) + '</div>' : '') +
+        '<div class="nas-item-url">背景路径: ' + App.Utils.esc(nas.bgPath || '/backgrounds/') + '</div>';
+      container.appendChild(item);
+    });
+  },
+
+  testConnectionUI: function(id) {
+    App.UI.toast('正在测试连接...');
+    this.testConnection(id).then(function(res) {
+      App.UI.toast(res.message);
+    }).catch(function(e) {
+      App.UI.toast('测试失败: ' + e.message);
+    });
+  },
+
+  browseUI: function(id) {
+    var self = this;
+    var $ = App.Utils.$;
+    var grid = $('nasBrowseGrid');
+    if (!grid) return;
+    grid.innerHTML = '<div style="text-align:center;padding:20px;"><span class="loading-spinner"></span> 正在浏览...</div>';
+    self.browseDir(id).then(function(images) {
+      if (images.length === 0) {
+        grid.innerHTML = '<div style="text-align:center;color:var(--muted-fg);font-size:13px;padding:20px;grid-column:1/-1;">目录中暂无图片</div>';
+        return;
+      }
+      grid.innerHTML = '';
+      images.forEach(function(img) {
+        var item = document.createElement('div');
+        item.className = 'bg-preview-item';
+        var im = document.createElement('img');
+        im.src = img.url;
+        im.alt = img.name;
+        im.loading = 'lazy';
+        im.onerror = function() { this.style.display = 'none'; item.style.background = 'var(--muted)'; };
+        item.appendChild(im);
+
+        var label = document.createElement('div');
+        label.className = 'bg-preview-label';
+        var sizeText = img.size ? ' (' + self._formatSize(img.size) + ')' : '';
+        label.textContent = img.name + sizeText;
+        item.appendChild(label);
+
+        var actions = document.createElement('div');
+        actions.className = 'bg-preview-actions';
+        var addBtn = document.createElement('button');
+        addBtn.className = 'bg-activate-btn';
+        addBtn.textContent = '+';
+        addBtn.title = '添加为背景';
+        addBtn.onclick = function(e) {
+          e.stopPropagation();
+          App.BackgroundManager.addImage(img.url, img.name, 'nas');
+          App.UI.toast('已添加: ' + img.name);
+        };
+        actions.appendChild(addBtn);
+        item.appendChild(actions);
+        item.onclick = function() {
+          App.BackgroundManager.addImage(img.url, img.name, 'nas');
+          App.UI.toast('已添加: ' + img.name);
+        };
+        grid.appendChild(item);
+      });
+    }).catch(function(e) {
+      grid.innerHTML = '<div style="text-align:center;color:var(--danger);font-size:13px;padding:20px;grid-column:1/-1;">浏览失败: ' + App.Utils.esc(e.message) + '</div>';
+    });
+  },
+
+  syncUI: function(id) {
+    var self = this;
+    App.UI.toast('正在同步背景...');
+    self.syncBackgrounds(id).then(function(res) {
+      App.UI.toast('同步完成: 新增 ' + res.added + ' 张，跳过 ' + res.skipped + ' 张');
+      App.BackgroundManager.renderPreviewGrid();
+    }).catch(function(e) {
+      App.UI.toast('同步失败: ' + e.message);
+    });
+  },
+
+  editUI: function(id) {
+    var $ = App.Utils.$;
+    var nas = this.getNas(id);
+    if (!nas) return;
+    $('nasEditId').value = id;
+    $('nasNameInput').value = nas.name;
+    $('nasBaseUrlInput').value = nas.baseUrl;
+    $('nasWebdavInput').value = nas.webdavUrl;
+    $('nasUsernameInput').value = nas.username || '';
+    $('nasPasswordInput').value = nas.password || '';
+    $('nasBgPathInput').value = nas.bgPath || '/backgrounds/';
+    $('nasDefaultCheck').checked = nas.isDefault || false;
+    $('nasEditTitle').textContent = '编辑飞牛 NAS';
+    $('nasEditOverlay').classList.add('active');
+  },
+
+  addUI: function() {
+    var $ = App.Utils.$;
+    $('nasEditId').value = '';
+    $('nasNameInput').value = '';
+    $('nasBaseUrlInput').value = '';
+    $('nasWebdavInput').value = '';
+    $('nasUsernameInput').value = '';
+    $('nasPasswordInput').value = '';
+    $('nasBgPathInput').value = '/backgrounds/';
+    $('nasDefaultCheck').checked = this._nasList.length === 0;
+    $('nasEditTitle').textContent = '添加飞牛 NAS';
+    $('nasEditOverlay').classList.add('active');
+    setTimeout(function() { $('nasNameInput').focus(); }, 100);
+  },
+
+  saveEdit: function() {
+    var $ = App.Utils.$;
+    var id = $('nasEditId').value;
+    var config = {
+      name: $('nasNameInput').value.trim() || '飞牛 NAS',
+      baseUrl: this.normalizeUrl($('nasBaseUrlInput').value.trim()),
+      webdavUrl: $('nasWebdavInput').value.trim(),
+      username: $('nasUsernameInput').value.trim(),
+      password: $('nasPasswordInput').value.trim(),
+      bgPath: $('nasBgPathInput').value.trim() || '/backgrounds/',
+      isDefault: $('nasDefaultCheck').checked
+    };
+    if (!config.baseUrl && !config.webdavUrl) { App.UI.toast('请至少配置一个地址'); return; }
+    if (id) { this.editNas(id, config); App.UI.toast('NAS 配置已更新'); }
+    else { this.addNas(config); App.UI.toast('NAS 已添加'); }
+    this.closeEdit();
+    this.renderNasList();
+  },
+
+  closeEdit: function() {
+    App.Utils.$('nasEditOverlay').classList.remove('active');
+  },
+
+  deleteUI: function(id) {
+    var nas = this.getNas(id);
+    if (!nas) return;
+    App.UI.confirm('删除 NAS', '确定删除「' + nas.name + '」？', function(ok) {
+      if (!ok) return;
+      App.FnNasManager.deleteNas(id);
+      App.FnNasManager.renderNasList();
+      App.UI.toast('NAS 已删除');
+    });
+  },
+
+  _formatSize: function(bytes) {
+    if (!bytes) return '';
+    if (bytes < 1024) return bytes + 'B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + 'KB';
+    return (bytes / 1048576).toFixed(1) + 'MB';
+  },
+
+  addUrlToBackground: function(url) {
+    var self = this;
+    App.UI.toast('正在解析地址...');
+    self.parseUrl(url).then(function(result) {
+      if (!result.accessible) {
+        App.UI.toast('解析失败: ' + result.error);
+        return;
+      }
+      var name = result.url.split('/').pop() || 'NAS 图片';
+      App.BackgroundManager.addImage(result.url, name, 'nas');
+      App.UI.toast('图片已添加到背景库 (' + result.width + 'x' + result.height + ')');
+    });
+  }
+};
+
 /* ===== App.BackgroundManager - 背景图片管理 ===== */
 App.BackgroundManager = {
   _settings: {
@@ -1966,7 +2652,12 @@ App.BackgroundManager = {
       } catch (e) {}
     }
     this._applySettings();
-    this._render();
+    var lastSuccess = this._getLastSuccess();
+    if (lastSuccess) {
+      var idx = this._settings.images.findIndex(function(img) { return img.url === lastSuccess.url; });
+      if (idx >= 0) this._settings.activeIndex = idx;
+    }
+    this._renderWithFailover();
     this._startCarousel();
   },
 
@@ -2120,7 +2811,49 @@ App.BackgroundManager = {
   },
 
   _getSourceClass: function(source) {
-    return { github: 'bg-source-github', custom: 'bg-source-custom', baidu: 'bg-source-baidu', local: 'bg-source-github' }[source] || 'bg-source-custom';
+    return { github: 'bg-source-github', custom: 'bg-source-custom', baidu: 'bg-source-baidu', nas: 'bg-source-nas', local: 'bg-source-github', cdn: 'bg-source-custom' }[source] || 'bg-source-custom';
+  },
+
+  _saveLastSuccess: function(url, source) {
+    try {
+      localStorage.setItem('kai_bg_last_success', JSON.stringify({ url: url, source: source, time: Date.now() }));
+    } catch (e) {}
+  },
+
+  _getLastSuccess: function() {
+    try {
+      var s = JSON.parse(localStorage.getItem('kai_bg_last_success') || 'null');
+      if (s && (Date.now() - s.time < 86400000)) return s;
+    } catch (e) {}
+    return null;
+  },
+
+  _renderWithFailover: function() {
+    var self = this;
+    var s = self._settings;
+    if (s.images.length === 0) return;
+    var activeImg = s.images[s.activeIndex];
+    if (!activeImg) return;
+
+    App.ImageSourceDetector.preload(activeImg.url).then(function() {
+      self._saveLastSuccess(activeImg.url, activeImg.source);
+      self._render();
+    }).catch(function() {
+      var candidates = s.images.map(function(img) {
+        return { url: img.url, source: img.source };
+      });
+      App.ImageSourceDetector.failover(candidates).then(function(res) {
+        var newIdx = s.images.findIndex(function(img) { return img.url === res.url; });
+        if (newIdx >= 0) {
+          s.activeIndex = newIdx;
+          self._saveLastSuccess(res.url, res.source);
+          self._render();
+          self._save();
+        }
+      }).catch(function() {
+        self._render();
+      });
+    });
   },
 
   addImage: function(url, name, source) {
@@ -3191,6 +3924,9 @@ App.UI = {
       App.BackgroundManager.renderPreviewGrid();
       App.BackgroundManager._applySettings();
     }
+    if (tab === 'nas') {
+      App.FnNasManager.renderNasList();
+    }
     if (tab === 'version') {
       App.VersionManager._updateUI();
     }
@@ -3325,6 +4061,7 @@ App.UI = {
         self.closeSysModal();
         if ($('calcOverlay').classList.contains('active')) $('calcOverlay').classList.remove('active');
         if ($('baiduOverlay').classList.contains('active')) App.BaiduImageParser.closeModal();
+        if ($('nasEditOverlay').classList.contains('active')) App.FnNasManager.closeEdit();
       }
       if ((e.key === '/' && !e.ctrlKey && !e.metaKey) || (e.key === 'k' && (e.ctrlKey || e.metaKey))) {
         if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'SELECT') {
@@ -3347,6 +4084,7 @@ App.UI = {
     self.setupDropZone('bgDropZone', 'bgFileInput', function(file) { App.BackgroundManager.uploadFile(file); }, { multiple: true });
 
     $('baiduOverlay').addEventListener('click', function(e) { if (e.target === this) App.BaiduImageParser.closeModal(); });
+    $('nasEditOverlay').addEventListener('click', function(e) { if (e.target === this) App.FnNasManager.closeEdit(); });
   },
 
   attachRipple: function(el) {
@@ -3373,6 +4111,7 @@ var fallback = {"categories":["常用工具","开发资源","社交媒体","学�
 
   App.UI.initTheme();
   App.ImageSourceDetector.init();
+  App.FnNasManager.init();
   App.BackgroundManager.init();
   App.Search.init();
   App.Clock.init();

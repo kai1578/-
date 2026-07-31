@@ -20,17 +20,34 @@
   --muted-fg: #64748B;
   --accent: #0052FF;
   --accent-2: #4D7CFF;
+  --accent-3: #818CFF;
   --accent-fg: #FFFFFF;
   --border: #E2E8F0;
   --card: #FFFFFF;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
-  --shadow-lg: 0 10px 15px rgba(0,0,0,0.08);
-  --shadow-accent: 0 4px 14px rgba(0,82,255,0.25);
+  --card-glass: rgba(255,255,255,0.72);
+  --card-glass-border: rgba(255,255,255,0.6);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.05);
+  --shadow-xl: 0 20px 40px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.06);
+  --shadow-accent: 0 4px 14px rgba(0,82,255,0.25), 0 2px 6px rgba(0,82,255,0.15);
+  --shadow-glow: 0 0 20px rgba(0,82,255,0.15);
   --danger: #EF4444;
+  --success: #10B981;
+  --warning: #F59E0B;
   --glow-1: rgba(0,82,255,0.06);
   --glow-2: rgba(77,124,255,0.05);
+  --glow-3: rgba(129,140,255,0.04);
   --icon-bg: #F1F5F9;
+  --grad-accent: linear-gradient(135deg, #0052FF 0%, #4D7CFF 50%, #818CFF 100%);
+  --grad-accent-soft: linear-gradient(135deg, rgba(0,82,255,0.08) 0%, rgba(77,124,255,0.06) 100%);
+  --grad-card: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+  --blur: 16px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 [data-theme="dark"] {
@@ -40,17 +57,28 @@
   --muted-fg: #94A3B8;
   --accent: #3B82F6;
   --accent-2: #60A5FA;
+  --accent-3: #93C5FD;
   --accent-fg: #FFFFFF;
   --border: #334155;
   --card: #1E293B;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.25);
-  --shadow-lg: 0 10px 15px rgba(0,0,0,0.3);
-  --shadow-accent: 0 4px 14px rgba(59,130,246,0.3);
+  --card-glass: rgba(30,41,59,0.72);
+  --card-glass-border: rgba(148,163,184,0.15);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.15);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.15);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.3), 0 4px 6px rgba(0,0,0,0.2);
+  --shadow-xl: 0 20px 40px rgba(0,0,0,0.4), 0 8px 16px rgba(0,0,0,0.25);
+  --shadow-accent: 0 4px 14px rgba(59,130,246,0.3), 0 2px 6px rgba(59,130,246,0.2);
+  --shadow-glow: 0 0 20px rgba(59,130,246,0.2);
   --danger: #F87171;
+  --success: #34D399;
+  --warning: #FBBF24;
   --glow-1: rgba(59,130,246,0.08);
   --glow-2: rgba(96,165,250,0.06);
+  --glow-3: rgba(147,197,253,0.05);
   --icon-bg: #334155;
+  --grad-accent: linear-gradient(135deg, #3B82F6 0%, #60A5FA 50%, #93C5FD 100%);
+  --grad-accent-soft: linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(96,165,250,0.08) 100%);
+  --grad-card: linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(30,41,59,0.7) 100%);
 }
 
 html { scroll-behavior: smooth; }
@@ -61,7 +89,48 @@ body {
   color: var(--fg);
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background-color 0.4s ease;
 }
+
+/* ===== 背景图片层 ===== */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1.2s ease-in-out;
+  will-change: opacity;
+}
+
+.bg-image.active { opacity: 1; }
+
+.bg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(250,250,250,0.85) 0%, rgba(250,250,250,0.75) 100%);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  transition: opacity 0.4s ease;
+}
+
+[data-theme="dark"] .bg-overlay {
+  background: linear-gradient(180deg, rgba(15,23,42,0.88) 0%, rgba(15,23,42,0.78) 100%);
+}
+
+body.bg-blur-off .bg-overlay { backdrop-filter: none; -webkit-backdrop-filter: none; }
+body.bg-grayscale .bg-image { filter: grayscale(100%); }
 
 body::before {
   content: '';
@@ -73,6 +142,7 @@ body::before {
   background: radial-gradient(circle, var(--glow-1) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
+  animation: glowFloat 8s ease-in-out infinite alternate;
 }
 
 body::after {
@@ -85,6 +155,12 @@ body::after {
   background: radial-gradient(circle, var(--glow-2) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
+  animation: glowFloat 10s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes glowFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, -20px) scale(1.1); }
 }
 
 .container {
@@ -112,8 +188,8 @@ header .logo {
 header .logo-icon {
   width: 44px;
   height: 44px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  border-radius: 12px;
+  background: var(--grad-accent);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -121,7 +197,10 @@ header .logo-icon {
   font-weight: 700;
   font-size: 20px;
   box-shadow: var(--shadow-accent);
+  transition: transform var(--transition-bounce);
 }
+
+header .logo-icon:hover { transform: scale(1.1) rotate(5deg); }
 
 header h1 {
   font-size: 28px;
@@ -136,9 +215,11 @@ header h1 {
   right: 24px;
   width: 44px;
   height: 44px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--card-glass-border);
+  background: var(--card-glass);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
   color: var(--muted-fg);
   font-size: 20px;
   cursor: pointer;
@@ -146,7 +227,7 @@ header h1 {
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow-sm);
-  transition: all 0.25s ease-out;
+  transition: all var(--transition);
   z-index: 100;
 }
 
@@ -166,12 +247,14 @@ header h1 {
 .search-box {
   display: flex;
   align-items: center;
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: 16px;
+  background: var(--card-glass);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  border: 1.5px solid var(--card-glass-border);
+  border-radius: var(--radius-lg);
   padding: 6px 6px 6px 20px;
   box-shadow: var(--shadow-md);
-  transition: all 0.25s ease-out;
+  transition: all var(--transition);
 }
 
 .search-box:focus-within {
@@ -227,7 +310,7 @@ header h1 {
 .search-box button {
   height: 44px;
   padding: 0 28px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: var(--grad-accent);
   color: var(--accent-fg);
   border: none;
   border-radius: 12px;
@@ -395,15 +478,18 @@ body.edit-mode .add-category-btn { display: flex; }
   align-items: center;
   gap: 12px;
   padding: clamp(10px, 1.8vw, 14px) clamp(12px, 2vw, 16px);
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: var(--card-glass);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  border: 1px solid var(--card-glass-border);
+  border-radius: var(--radius-md);
   text-decoration: none;
   color: var(--fg);
-  transition: all 0.25s ease-out;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
   box-shadow: var(--shadow-sm);
   position: relative;
   animation: cardIn 0.35s ease-out both;
+  overflow: hidden;
 }
 
 .nav-card:nth-child(1) { animation-delay: 0s; }
@@ -413,8 +499,24 @@ body.edit-mode .add-category-btn { display: flex; }
 .nav-card:nth-child(5) { animation-delay: 0.12s; }
 .nav-card:nth-child(n+6) { animation-delay: 0.15s; }
 
-.nav-card:hover { border-color: var(--accent); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.nav-card:hover { border-color: var(--accent); box-shadow: var(--shadow-lg), var(--shadow-glow); transform: translateY(-3px) scale(1.01); }
 .nav-card:active { transform: translateY(0) scale(0.98); }
+
+/* Ripple 效果 */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  transform: scale(0);
+  animation: rippleAnim 0.6s ease-out;
+  pointer-events: none;
+}
+
+[data-theme="dark"] .ripple { background: rgba(147,197,253,0.3); }
+
+@keyframes rippleAnim {
+  to { transform: scale(4); opacity: 0; }
+}
 
 .nav-card .icon {
   width: 36px;
@@ -536,13 +638,16 @@ body.edit-mode .nav-card .card-actions { display: flex; }
 .modal-overlay.active { display: flex; }
 
 .modal {
-  background: var(--card);
-  border-radius: 20px;
+  background: var(--card-glass);
+  backdrop-filter: blur(calc(var(--blur) + 8px));
+  -webkit-backdrop-filter: blur(calc(var(--blur) + 8px));
+  border: 1px solid var(--card-glass-border);
+  border-radius: var(--radius-lg);
   padding: 32px;
   width: 90%;
   max-width: 460px;
-  box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-  animation: modalIn 0.3s ease-out;
+  box-shadow: var(--shadow-xl);
+  animation: modalIn 0.3s var(--transition-bounce);
 }
 
 .modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 24px; color: var(--fg); }
@@ -616,9 +721,11 @@ body.edit-mode .nav-card .card-actions { display: flex; }
   right: 24px;
   width: 44px;
   height: 44px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--card-glass-border);
+  background: var(--card-glass);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
   color: var(--muted-fg);
   font-size: 18px;
   cursor: pointer;
@@ -626,7 +733,7 @@ body.edit-mode .nav-card .card-actions { display: flex; }
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow-md);
-  transition: all 0.25s ease-out;
+  transition: all var(--transition);
   z-index: 100;
   opacity: 0;
   pointer-events: none;
@@ -648,8 +755,53 @@ footer {
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeInDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+@keyframes modalIn { from { opacity: 0; transform: scale(0.92) translateY(16px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 @keyframes cardIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes bounceIn { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
+
+/* Loading 旋转动画 */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Skeleton 骨架屏 */
+.skeleton {
+  background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+.skeleton-card {
+  height: 56px;
+  margin-bottom: 8px;
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: var(--grad-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* 按钮波纹 */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
 
 .mobile-bar {
   display: none;
@@ -905,9 +1057,179 @@ footer {
 
 .ver-info .ver-label { font-size: 13px; color: var(--muted-fg); }
 .ver-info .ver-value { font-size: 16px; font-weight: 700; color: var(--accent); }
+
+/* ===== 背景管理面板样式 ===== */
+.bg-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.bg-preview-item {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 16/10;
+  cursor: pointer;
+  border: 2px solid var(--border);
+  transition: all var(--transition);
+  background: var(--muted);
+}
+
+.bg-preview-item:hover { border-color: var(--accent); transform: scale(1.03); }
+.bg-preview-item.active { border-color: var(--accent); box-shadow: var(--shadow-accent); }
+
+.bg-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bg-preview-item .bg-preview-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.bg-preview-item:hover .bg-preview-actions { opacity: 1; }
+
+.bg-preview-item .bg-preview-actions button {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  backdrop-filter: blur(4px);
+}
+
+.bg-preview-item .bg-preview-actions button:hover { background: var(--danger); }
+.bg-preview-item .bg-preview-actions .bg-activate-btn:hover { background: var(--success); }
+
+.bg-preview-item .bg-preview-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 4px 8px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  color: white;
+  font-size: 10px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bg-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--muted);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
+.bg-settings-row label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.bg-settings-row input[type="range"] {
+  flex: 1;
+  max-width: 150px;
+  margin-left: 12px;
+  accent-color: var(--accent);
+}
+
+.bg-settings-row .bg-value {
+  font-size: 12px;
+  color: var(--muted-fg);
+  min-width: 36px;
+  text-align: right;
+}
+
+.bg-toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.bg-toggle.on { background: var(--accent); }
+
+.bg-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.bg-toggle.on::after { transform: translateX(18px); }
+
+.bg-source-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.bg-source-github { background: rgba(0,0,0,0.1); color: var(--fg); }
+.bg-source-custom { background: rgba(0,82,255,0.1); color: var(--accent); }
+.bg-source-baidu { background: rgba(234,88,12,0.1); color: var(--warning); }
+
+.bg-speed-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted-fg);
+  margin-left: 8px;
+}
+
+.bg-speed-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.bg-speed-fast { background: var(--success); }
+.bg-speed-medium { background: var(--warning); }
+.bg-speed-slow { background: var(--danger); }
 </style>
 </head>
 <body>
+
+<!-- 背景图片层 -->
+<div class="bg-layer" id="bgLayer"></div>
+<div class="bg-overlay" id="bgOverlay"></div>
 
 <button class="settings-btn" id="settingsBtn" title="设置" aria-label="设置">⚙️</button>
 <button class="settings-btn" id="adminBtn" title="系统管理" style="right:76px;font-size:16px;display:none;" aria-label="系统管理">🔑</button>
@@ -1026,6 +1348,7 @@ footer {
       <button class="sys-tab active" data-tab="upgrade" onclick="App.UI.switchSysTab('upgrade')">在线升级</button>
       <button class="sys-tab" data-tab="data" onclick="App.UI.switchSysTab('data')">数据管理</button>
       <button class="sys-tab" data-tab="icons" onclick="App.UI.switchSysTab('icons')">图标管理</button>
+      <button class="sys-tab" data-tab="background" onclick="App.UI.switchSysTab('background')">背景管理</button>
       <button class="sys-tab" data-tab="version" onclick="App.UI.switchSysTab('version')">版本管理</button>
       <button class="sys-tab" data-tab="github" onclick="App.UI.switchSysTab('github')">GitHub 配置</button>
     </div>
@@ -1071,6 +1394,66 @@ footer {
       <div class="icon-grid" id="iconGrid"></div>
       <div class="sys-btn-row">
         <button class="sys-btn sys-btn-secondary" onclick="App.SiteManager.loadIcons()">刷新图标列表</button>
+      </div>
+    </div>
+
+    <!-- 背景管理 -->
+    <div class="sys-panel" id="panel-background">
+      <div class="sys-field">
+        <label>背景图片列表</label>
+        <div class="bg-preview-grid" id="bgPreviewGrid">
+          <div style="text-align:center;color:var(--muted-fg);font-size:13px;padding:20px;grid-column:1/-1;">加载中...</div>
+        </div>
+      </div>
+
+      <div class="sys-field">
+        <label>上传背景图片</label>
+        <div class="drop-zone" id="bgDropZone">
+          <div class="drop-icon">🖼️</div>
+          <div>拖拽或点击上传 JPG/PNG/WebP 背景图片</div>
+          <input type="file" id="bgFileInput" accept=".jpg,.jpeg,.png,.webp,.avif" style="display:none;" multiple>
+        </div>
+      </div>
+
+      <div class="sys-field">
+        <label>添加自定义图片 URL</label>
+        <input type="url" id="bgUrlInput" placeholder="https://example.com/background.jpg">
+        <div class="sys-btn-row" style="margin-top:8px;">
+          <button class="sys-btn sys-btn-secondary" onclick="App.BackgroundManager.addCustomUrl()">添加 URL</button>
+          <button class="sys-btn sys-btn-secondary" onclick="App.BaiduImageParser.openModal()">🔍 百度图片解析</button>
+        </div>
+      </div>
+
+      <div class="sys-field">
+        <label>显示设置</label>
+        <div class="bg-settings-row">
+          <label>毛玻璃模糊</label>
+          <input type="range" id="bgBlurRange" min="0" max="30" value="16" oninput="App.BackgroundManager.updateBlur(this.value)">
+          <span class="bg-value" id="bgBlurValue">16px</span>
+        </div>
+        <div class="bg-settings-row">
+          <label>遮罩透明度</label>
+          <input type="range" id="bgOpacityRange" min="0" max="100" value="85" oninput="App.BackgroundManager.updateOpacity(this.value)">
+          <span class="bg-value" id="bgOpacityValue">85%</span>
+        </div>
+        <div class="bg-settings-row">
+          <label>轮播间隔（秒）</label>
+          <input type="range" id="bgIntervalRange" min="0" max="60" value="0" oninput="App.BackgroundManager.updateInterval(this.value)">
+          <span class="bg-value" id="bgIntervalValue">关</span>
+        </div>
+        <div class="bg-settings-row">
+          <label>黑白遮罩</label>
+          <div class="bg-toggle" id="bgGrayscaleToggle" onclick="App.BackgroundManager.toggleGrayscale()"></div>
+        </div>
+        <div class="bg-settings-row">
+          <label>随机背景</label>
+          <div class="bg-toggle" id="bgRandomToggle" onclick="App.BackgroundManager.toggleRandom()"></div>
+        </div>
+      </div>
+
+      <div class="sys-btn-row">
+        <button class="sys-btn sys-btn-primary" onclick="App.BackgroundManager.saveSettings()">保存背景设置</button>
+        <button class="sys-btn sys-btn-danger" onclick="App.BackgroundManager.clearAll()">清除全部背景</button>
       </div>
     </div>
 
@@ -1125,8 +1508,35 @@ footer {
   </div>
 </div>
 
+<!-- 百度图片解析弹窗 -->
+<div class="modal-overlay" id="baiduOverlay">
+  <div class="modal" style="max-width:520px;">
+    <h2>🔍 百度图片解析</h2>
+    <div class="form-group">
+      <label>百度图片页面链接</label>
+      <input type="url" id="baiduUrlInput" placeholder="https://image.baidu.com/... 或 https://baike.baidu.com/...">
+      <div class="sys-hint">输入百度图片详情页链接，自动解析获取原图地址</div>
+    </div>
+    <div class="form-group" id="baiduPreviewGroup" style="display:none;">
+      <label>解析结果预览</label>
+      <div class="logo-preview" id="baiduPreview" style="min-height:120px;flex-direction:column;align-items:center;">
+        <img id="baiduPreviewImg" style="width:auto;height:80px;max-width:100%;object-fit:contain;border-radius:8px;">
+        <span id="baiduPreviewUrl" style="font-size:11px;word-break:break-all;margin-top:8px;"></span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="App.BaiduImageParser.closeModal()">取消</button>
+      <button class="btn-save" id="baiduParseBtn" onclick="App.BaiduImageParser.parse()">解析</button>
+    </div>
+    <div class="modal-actions" id="baiduUploadActions" style="display:none;">
+      <button class="btn-save" onclick="App.BaiduImageParser.uploadToGitHub()">上传到 GitHub</button>
+      <button class="btn-save" style="background:var(--grad-accent-soft);color:var(--accent);" onclick="App.BaiduImageParser.addToBackground()">添加为背景</button>
+    </div>
+  </div>
+</div>
+
 <script>
-var VER = '2.0.0';
+var VER = '2.1.0';
 
 /* ===== App 命名空间 ===== */
 var App = {};
@@ -1307,6 +1717,574 @@ App.FileManager = {
         });
       })
       .catch(function() { return []; });
+  }
+};
+
+/* ===== App.ImageSourceDetector - 智能图片来源检测与测速 ===== */
+App.ImageSourceDetector = {
+  _cache: {},
+  _cacheKey: 'kai_img_speed_cache',
+
+  init: function() {
+    try { this._cache = JSON.parse(localStorage.getItem(this._cacheKey) || '{}'); }
+    catch (e) { this._cache = {}; }
+  },
+
+  detectSource: function(url) {
+    if (!url) return 'unknown';
+    if (url.indexOf('github.io') > -1 || url.indexOf('githubusercontent.com') > -1) return 'github';
+    if (url.indexOf('myhuaweicloud.com') > -1 || url.indexOf('obs.') > -1) return 'obs';
+    if (url.indexOf('https://') === 0) return 'custom';
+    if (url.indexOf('icons/') === 0 || url.indexOf('backgrounds/') === 0) return 'local';
+    return 'unknown';
+  },
+
+  measureSpeed: function(url) {
+    var self = this;
+    var cacheKey = App.Utils.hash(url);
+    if (self._cache[cacheKey] && (Date.now() - self._cache[cacheKey].time < 300000)) {
+      return Promise.resolve(self._cache[cacheKey].speed);
+    }
+    return new Promise(function(resolve) {
+      var start = performance.now();
+      var img = new Image();
+      var done = false;
+      var finish = function(speed) {
+        if (done) return;
+        done = true;
+        self._cache[cacheKey] = { speed: speed, time: Date.now() };
+        try { localStorage.setItem(self._cacheKey, JSON.stringify(self._cache)); } catch (e) {}
+        resolve(speed);
+      };
+      img.onload = function() {
+        var elapsed = performance.now() - start;
+        finish(elapsed < 200 ? 'fast' : elapsed < 800 ? 'medium' : 'slow');
+      };
+      img.onerror = function() { finish('error'); };
+      setTimeout(function() { finish('timeout'); }, 3000);
+      img.src = url + (url.indexOf('?') > -1 ? '&' : '?') + '_t=' + Date.now();
+    });
+  },
+
+  batchMeasure: function(urls) {
+    var self = this;
+    return Promise.all(urls.map(function(u) {
+      return self.measureSpeed(u).then(function(speed) { return { url: u, speed: speed, source: self.detectSource(u) }; });
+    }));
+  },
+
+  selectFastest: function(urls) {
+    var self = this;
+    return self.batchMeasure(urls).then(function(results) {
+      var valid = results.filter(function(r) { return r.speed === 'fast' || r.speed === 'medium'; });
+      if (valid.length === 0) valid = results.filter(function(r) { return r.speed !== 'error' && r.speed !== 'timeout'; });
+      if (valid.length === 0) return urls[0];
+      valid.sort(function(a, b) {
+        var order = { fast: 0, medium: 1, slow: 2, error: 3, timeout: 4 };
+        return order[a.speed] - order[b.speed];
+      });
+      return valid[0].url;
+    });
+  },
+
+  getSpeedClass: function(speed) {
+    return { fast: 'bg-speed-fast', medium: 'bg-speed-medium', slow: 'bg-speed-slow', error: 'bg-speed-slow', timeout: 'bg-speed-slow' }[speed] || 'bg-speed-slow';
+  },
+
+  preload: function(url) {
+    return new Promise(function(resolve, reject) {
+      var img = new Image();
+      img.onload = function() { resolve(img); };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+};
+
+/* ===== App.BaiduImageParser - 百度图片解析 ===== */
+App.BaiduImageParser = {
+  _resolvedUrl: '',
+
+  openModal: function() {
+    var $ = App.Utils.$;
+    $('baiduUrlInput').value = '';
+    $('baiduPreviewGroup').style.display = 'none';
+    $('baiduUploadActions').style.display = 'none';
+    $('baiduParseBtn').textContent = '解析';
+    $('baiduOverlay').classList.add('active');
+    setTimeout(function() { $('baiduUrlInput').focus(); }, 100);
+  },
+
+  closeModal: function() {
+    App.Utils.$('baiduOverlay').classList.remove('active');
+    this._resolvedUrl = '';
+  },
+
+  parse: function() {
+    var $ = App.Utils.$;
+    var url = $('baiduUrlInput').value.trim();
+    if (!url) { App.UI.toast('请输入百度图片链接'); return; }
+
+    var btn = $('baiduParseBtn');
+    btn.textContent = '解析中...';
+    btn.disabled = true;
+
+    var resolved = this._extractImageUrl(url);
+
+    if (resolved) {
+      this._showResult(resolved);
+    } else {
+      this._fetchAndParse(url).then(function(realUrl) {
+        if (realUrl) {
+          App.BaiduImageParser._showResult(realUrl);
+        } else {
+          App.UI.toast('无法解析图片地址，请检查链接');
+          btn.textContent = '解析';
+          btn.disabled = false;
+        }
+      }).catch(function() {
+        App.UI.toast('解析失败，可能是跨域限制');
+        btn.textContent = '解析';
+        btn.disabled = false;
+      });
+    }
+  },
+
+  _extractImageUrl: function(url) {
+    var patterns = [
+      /[?&]imgurl=([^&]+)/,
+      /[?&]objurl=([^&]+)/,
+      /[?&]src=([^&]+)/,
+      /preview\/([^/]+)\.html/,
+      /pic\/([a-f0-9]+)/
+    ];
+    for (var i = 0; i < patterns.length; i++) {
+      var m = url.match(patterns[i]);
+      if (m && m[1]) {
+        try { return decodeURIComponent(m[1]); } catch (e) { return m[1]; }
+      }
+    }
+    if (/\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(url)) return url;
+    return '';
+  },
+
+  _fetchAndParse: function(url) {
+    return new Promise(function(resolve) {
+      var proxyUrls = [
+        'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+        'https://corsproxy.io/?' + encodeURIComponent(url)
+      ];
+      var tryFetch = function(idx) {
+        if (idx >= proxyUrls.length) { resolve(''); return; }
+        fetch(proxyUrls[idx]).then(function(r) { return r.text(); }).then(function(html) {
+          var imgMatch = html.match(/"objURL"\s*:\s*"([^"]+)"/) ||
+                         html.match(/"objUrl"\s*:\s*"([^"]+)"/) ||
+                         html.match(/data-src="([^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/) ||
+                         html.match(/src="([^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/);
+          if (imgMatch && imgMatch[1]) {
+            resolve(imgMatch[1].replace(/\\u002f/g, '/').replace(/\\/g, ''));
+          } else {
+            tryFetch(idx + 1);
+          }
+        }).catch(function() { tryFetch(idx + 1); });
+      };
+      tryFetch(0);
+    });
+  },
+
+  _showResult: function(url) {
+    var $ = App.Utils.$;
+    this._resolvedUrl = url;
+    $('baiduPreviewGroup').style.display = 'block';
+    $('baiduPreviewImg').src = url;
+    $('baiduPreviewUrl').textContent = url;
+    $('baiduParseBtn').textContent = '重新解析';
+    $('baiduParseBtn').disabled = false;
+    $('baiduUploadActions').style.display = 'flex';
+    $('baiduPreviewImg').onerror = function() {
+      App.UI.toast('图片预览失败，但地址已解析');
+    };
+  },
+
+  uploadToGitHub: function() {
+    if (!this._resolvedUrl) { App.UI.toast('请先解析图片'); return; }
+    if (!App.ConfigManager.isConfigured()) { App.UI.toast('请先配置 GitHub'); return; }
+    var self = this;
+    var url = this._resolvedUrl;
+    App.UI.toast('正在下载图片...');
+    fetch(url).then(function(r) { return r.blob(); }).then(function(blob) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var base64 = e.target.result.split(',')[1];
+        var ext = blob.type.split('/')[1] || 'jpg';
+        var filename = 'baidu_' + Date.now() + '.' + ext;
+        var path = 'backgrounds/' + filename;
+        App.UI.toast('正在上传到 GitHub...');
+        App.FileManager.uploadBinary(path, base64, '上传百度图片 ' + filename).then(function(res) {
+          if (res && res.content) {
+            App.UI.toast('图片上传成功: ' + filename);
+            App.BackgroundManager.refreshList();
+          } else {
+            App.UI.toast('上传失败');
+          }
+        });
+      };
+      reader.readAsDataURL(blob);
+    }).catch(function() {
+      App.UI.toast('下载图片失败，可能受跨域限制');
+    });
+  },
+
+  addToBackground: function() {
+    if (!this._resolvedUrl) { App.UI.toast('请先解析图片'); return; }
+    App.BackgroundManager.addUrlToList(this._resolvedUrl, 'baidu');
+    App.UI.toast('已添加到背景列表');
+    this.closeModal();
+  }
+};
+
+/* ===== App.BackgroundManager - 背景图片管理 ===== */
+App.BackgroundManager = {
+  _settings: {
+    images: [],
+    activeIndex: 0,
+    blur: 16,
+    opacity: 85,
+    interval: 0,
+    grayscale: false,
+    random: false
+  },
+  _carouselTimer: null,
+  _preloaded: {},
+
+  init: function() {
+    var saved = localStorage.getItem('kai_bg_settings');
+    if (saved) {
+      try {
+        var s = JSON.parse(saved);
+        this._settings = Object.assign(this._settings, s);
+      } catch (e) {}
+    }
+    this._applySettings();
+    this._render();
+    this._startCarousel();
+  },
+
+  _applySettings: function() {
+    var $ = App.Utils.$;
+    var s = this._settings;
+    document.body.style.setProperty('--blur', s.blur + 'px');
+    var overlay = $('bgOverlay');
+    if (overlay) {
+      overlay.style.opacity = s.opacity / 100;
+    }
+    document.body.classList.toggle('bg-grayscale', s.grayscale);
+    if ($('bgBlurRange')) {
+      $('bgBlurRange').value = s.blur;
+      $('bgBlurValue').textContent = s.blur + 'px';
+      $('bgOpacityRange').value = s.opacity;
+      $('bgOpacityValue').textContent = s.opacity + '%';
+      $('bgIntervalRange').value = s.interval;
+      $('bgIntervalValue').textContent = s.interval === 0 ? '关' : s.interval + 's';
+      $('bgGrayscaleToggle').classList.toggle('on', s.grayscale);
+      $('bgRandomToggle').classList.toggle('on', s.random);
+    }
+  },
+
+  _save: function() {
+    localStorage.setItem('kai_bg_settings', JSON.stringify(this._settings));
+  },
+
+  _render: function() {
+    var $ = App.Utils.$;
+    var layer = $('bgLayer');
+    if (!layer) return;
+    layer.innerHTML = '';
+    var s = this._settings;
+    if (s.images.length === 0) return;
+
+    s.images.forEach(function(img, i) {
+      var div = document.createElement('div');
+      div.className = 'bg-image' + (i === s.activeIndex ? ' active' : '');
+      div.style.backgroundImage = 'url("' + img.url + '")';
+      div.dataset.idx = i;
+      layer.appendChild(div);
+    });
+
+    this._preloadNext();
+  },
+
+  _preloadNext: function() {
+    var s = this._settings;
+    if (s.images.length < 2) return;
+    var nextIdx = (s.activeIndex + 1) % s.images.length;
+    var nextUrl = s.images[nextIdx].url;
+    if (!this._preloaded[nextUrl]) {
+      this._preloaded[nextUrl] = true;
+      App.ImageSourceDetector.preload(nextUrl).catch(function() {});
+    }
+  },
+
+  _startCarousel: function() {
+    var self = this;
+    clearInterval(this._carouselTimer);
+    var s = this._settings;
+    if (s.interval > 0 && s.images.length > 1) {
+      this._carouselTimer = setInterval(function() {
+        self.next();
+      }, s.interval * 1000);
+    }
+  },
+
+  next: function() {
+    var s = this._settings;
+    if (s.images.length < 2) return;
+    if (s.random) {
+      var newIdx;
+      do { newIdx = Math.floor(Math.random() * s.images.length); }
+      while (newIdx === s.activeIndex && s.images.length > 1);
+      s.activeIndex = newIdx;
+    } else {
+      s.activeIndex = (s.activeIndex + 1) % s.images.length;
+    }
+    this._render();
+    this._save();
+  },
+
+  setActive: function(idx) {
+    this._settings.activeIndex = idx;
+    this._render();
+    this._save();
+  },
+
+  refreshList: function() {
+    if (App.Utils.$('panel-background') && App.Utils.$('panel-background').classList.contains('active')) {
+      this.renderPreviewGrid();
+    }
+  },
+
+  renderPreviewGrid: function() {
+    var $ = App.Utils.$;
+    var grid = $('bgPreviewGrid');
+    if (!grid) return;
+    var self = this;
+    var s = this._settings;
+
+    if (s.images.length === 0) {
+      grid.innerHTML = '<div style="text-align:center;color:var(--muted-fg);font-size:13px;padding:20px;grid-column:1/-1;">暂无背景图片，请上传或添加 URL</div>';
+      return;
+    }
+
+    grid.innerHTML = '';
+    s.images.forEach(function(img, i) {
+      var item = document.createElement('div');
+      item.className = 'bg-preview-item' + (i === s.activeIndex ? ' active' : '');
+
+      var im = document.createElement('img');
+      im.src = img.url;
+      im.alt = img.name || '背景';
+      im.loading = 'lazy';
+      im.onerror = function() { this.style.display = 'none'; item.style.background = 'var(--muted)'; };
+      item.appendChild(im);
+
+      var label = document.createElement('div');
+      label.className = 'bg-preview-label';
+      label.textContent = img.name || ('背景 ' + (i + 1));
+      item.appendChild(label);
+
+      var sourceBadge = document.createElement('span');
+      sourceBadge.className = 'bg-source-badge ' + self._getSourceClass(img.source);
+      sourceBadge.textContent = img.source || 'custom';
+      label.appendChild(sourceBadge);
+
+      var actions = document.createElement('div');
+      actions.className = 'bg-preview-actions';
+
+      var activateBtn = document.createElement('button');
+      activateBtn.className = 'bg-activate-btn';
+      activateBtn.textContent = '✓';
+      activateBtn.title = '设为当前';
+      activateBtn.onclick = function(e) { e.stopPropagation(); self.setActive(i); };
+      actions.appendChild(activateBtn);
+
+      var delBtn = document.createElement('button');
+      delBtn.textContent = '×';
+      delBtn.title = '删除';
+      delBtn.onclick = function(e) { e.stopPropagation(); self.removeImage(i); };
+      actions.appendChild(delBtn);
+
+      item.appendChild(actions);
+      item.onclick = function() { self.setActive(i); };
+      grid.appendChild(item);
+    });
+  },
+
+  _getSourceClass: function(source) {
+    return { github: 'bg-source-github', custom: 'bg-source-custom', baidu: 'bg-source-baidu', local: 'bg-source-github' }[source] || 'bg-source-custom';
+  },
+
+  addImage: function(url, name, source) {
+    if (!url) return;
+    if (this._settings.images.some(function(img) { return img.url === url; })) {
+      App.UI.toast('该图片已存在');
+      return;
+    }
+    this._settings.images.push({ url: url, name: name || ('背景 ' + (this._settings.images.length + 1)), source: source || 'custom' });
+    if (this._settings.images.length === 1) this._settings.activeIndex = 0;
+    this._render();
+    this._save();
+    this.renderPreviewGrid();
+    this._startCarousel();
+  },
+
+  addUrlToList: function(url, source) {
+    var name = source === 'baidu' ? '百度图片' : '自定义图片';
+    this.addImage(url, name, source);
+  },
+
+  addCustomUrl: function() {
+    var $ = App.Utils.$;
+    var url = $('bgUrlInput').value.trim();
+    if (!url) { App.UI.toast('请输入图片 URL'); return; }
+    if (!/^https?:\/\//i.test(url)) { App.UI.toast('请输入有效的 URL'); return; }
+    this.addImage(url, '自定义图片', 'custom');
+    $('bgUrlInput').value = '';
+    App.UI.toast('图片已添加');
+  },
+
+  removeImage: function(idx) {
+    var self = this;
+    App.UI.confirm('删除背景', '确定删除这张背景图片？', function(ok) {
+      if (!ok) return;
+      self._settings.images.splice(idx, 1);
+      if (self._settings.activeIndex >= self._settings.images.length) {
+        self._settings.activeIndex = Math.max(0, self._settings.images.length - 1);
+      }
+      self._render();
+      self._save();
+      self.renderPreviewGrid();
+      self._startCarousel();
+      App.UI.toast('背景已删除');
+    });
+  },
+
+  uploadFile: function(file) {
+    if (!file) return;
+    if (!App.ConfigManager.isConfigured()) { App.UI.toast('请先配置 GitHub'); return; }
+    var self = this;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var base64 = e.target.result.split(',')[1];
+      var path = 'backgrounds/' + file.name;
+      App.UI.toast('正在上传 ' + file.name + '...');
+      App.FileManager.uploadBinary(path, base64, '上传背景 ' + file.name).then(function(res) {
+        if (res && res.content) {
+          var url = App.ConfigManager.isConfigured()
+            ? 'https://raw.githubusercontent.com/' + App.ConfigManager.getRepo() + '/' + App.ConfigManager.getBranch() + '/backgrounds/' + file.name
+            : 'backgrounds/' + file.name;
+          self.addImage(url, file.name, 'github');
+          App.UI.toast(file.name + ' 上传成功');
+        } else {
+          App.UI.toast('上传失败');
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  },
+
+  loadFromGitHub: function() {
+    var self = this;
+    if (!App.ConfigManager.isConfigured()) return;
+    App.FileManager.listDir('backgrounds').then(function(items) {
+      var files = items.filter(function(f) { return f.type === 'file' && /\.(jpg|jpeg|png|webp|avif|gif)$/i.test(f.name); });
+      var existing = self._settings.images.map(function(img) { return img.name; });
+      files.forEach(function(f) {
+        if (existing.indexOf(f.name) === -1) {
+          self._settings.images.push({
+            url: f.download_url || ('backgrounds/' + f.name),
+            name: f.name,
+            source: 'github'
+          });
+        }
+      });
+      if (self._settings.images.length > 0 && self._settings.activeIndex >= self._settings.images.length) {
+        self._settings.activeIndex = 0;
+      }
+      self._render();
+      self._save();
+      self.renderPreviewGrid();
+      self._startCarousel();
+    });
+  },
+
+  updateBlur: function(val) {
+    this._settings.blur = parseInt(val);
+    document.body.style.setProperty('--blur', val + 'px');
+    App.Utils.$('bgBlurValue').textContent = val + 'px';
+    this._save();
+  },
+
+  updateOpacity: function(val) {
+    this._settings.opacity = parseInt(val);
+    var overlay = App.Utils.$('bgOverlay');
+    if (overlay) overlay.style.opacity = val / 100;
+    App.Utils.$('bgOpacityValue').textContent = val + '%';
+    this._save();
+  },
+
+  updateInterval: function(val) {
+    this._settings.interval = parseInt(val);
+    App.Utils.$('bgIntervalValue').textContent = val === '0' ? '关' : val + 's';
+    this._save();
+    this._startCarousel();
+  },
+
+  toggleGrayscale: function() {
+    this._settings.grayscale = !this._settings.grayscale;
+    document.body.classList.toggle('bg-grayscale', this._settings.grayscale);
+    App.Utils.$('bgGrayscaleToggle').classList.toggle('on', this._settings.grayscale);
+    this._save();
+  },
+
+  toggleRandom: function() {
+    this._settings.random = !this._settings.random;
+    App.Utils.$('bgRandomToggle').classList.toggle('on', this._settings.random);
+    this._save();
+  },
+
+  saveSettings: function() {
+    this._save();
+    App.UI.toast('背景设置已保存');
+  },
+
+  clearAll: function() {
+    var self = this;
+    App.UI.confirm('清除背景', '确定清除所有背景图片？', function(ok) {
+      if (!ok) return;
+      self._settings.images = [];
+      self._settings.activeIndex = 0;
+      self._render();
+      self._save();
+      self.renderPreviewGrid();
+      clearInterval(self._carouselTimer);
+      App.UI.toast('已清除全部背景');
+    });
+  },
+
+  testSpeed: function() {
+    var self = this;
+    var s = this._settings;
+    if (s.images.length === 0) { App.UI.toast('暂无背景图片'); return; }
+    App.UI.toast('正在测速...');
+    var urls = s.images.map(function(img) { return img.url; });
+    App.ImageSourceDetector.batchMeasure(urls).then(function(results) {
+      results.forEach(function(r, i) {
+        s.images[i].speed = r.speed;
+      });
+      self.renderPreviewGrid();
+      var fast = results.filter(function(r) { return r.speed === 'fast'; }).length;
+      App.UI.toast('测速完成: ' + fast + ' 张快速加载');
+    });
   }
 };
 
@@ -2031,6 +3009,17 @@ App.Render = {
         card.target = '_blank';
         card.draggable = edit;
         card.dataset.idx = idx;
+        card.addEventListener('pointerdown', function(e) {
+          var rect = card.getBoundingClientRect();
+          var ripple = document.createElement('span');
+          ripple.className = 'ripple';
+          var size = Math.max(rect.width, rect.height);
+          ripple.style.width = ripple.style.height = size + 'px';
+          ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+          ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+          card.appendChild(ripple);
+          setTimeout(function() { if (ripple.parentNode) ripple.parentNode.removeChild(ripple); }, 600);
+        });
         card.onclick = function(e) {
           if (edit) { e.preventDefault(); App.SiteManager.editSite(idx); }
           else { var visits2 = JSON.parse(localStorage.getItem('kai_visits') || '{}'); visits2[site.url] = (visits2[site.url] || 0) + 1; localStorage.setItem('kai_visits', JSON.stringify(visits2)); }
@@ -2197,6 +3186,11 @@ App.UI = {
     if (tab === 'icons') {
       App.SiteManager.loadIcons();
     }
+    if (tab === 'background') {
+      App.BackgroundManager.loadFromGitHub();
+      App.BackgroundManager.renderPreviewGrid();
+      App.BackgroundManager._applySettings();
+    }
     if (tab === 'version') {
       App.VersionManager._updateUI();
     }
@@ -2330,6 +3324,7 @@ App.UI = {
         self.closeConfirm(false);
         self.closeSysModal();
         if ($('calcOverlay').classList.contains('active')) $('calcOverlay').classList.remove('active');
+        if ($('baiduOverlay').classList.contains('active')) App.BaiduImageParser.closeModal();
       }
       if ((e.key === '/' && !e.ctrlKey && !e.metaKey) || (e.key === 'k' && (e.ctrlKey || e.metaKey))) {
         if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'SELECT') {
@@ -2349,6 +3344,23 @@ App.UI = {
 
     self.setupDropZone('upgradeDropZone', 'upgradeFileInput', function(file) { App.UpgradeManager.onFileSelect(file); });
     self.setupDropZone('iconDropZone', 'iconFileInput', function(file) { App.SiteManager.uploadIcon(file); }, { multiple: true });
+    self.setupDropZone('bgDropZone', 'bgFileInput', function(file) { App.BackgroundManager.uploadFile(file); }, { multiple: true });
+
+    $('baiduOverlay').addEventListener('click', function(e) { if (e.target === this) App.BaiduImageParser.closeModal(); });
+  },
+
+  attachRipple: function(el) {
+    el.addEventListener('click', function(e) {
+      var rect = el.getBoundingClientRect();
+      var ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      var size = Math.max(rect.width, rect.height);
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+      ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+      el.appendChild(ripple);
+      setTimeout(function() { if (ripple.parentNode) ripple.parentNode.removeChild(ripple); }, 600);
+    });
   }
 };
 
@@ -2360,6 +3372,8 @@ var fallback = {"categories":["常用工具","开发资源","社交媒体","学�
   $('verDisplay').textContent = 'v' + VER;
 
   App.UI.initTheme();
+  App.ImageSourceDetector.init();
+  App.BackgroundManager.init();
   App.Search.init();
   App.Clock.init();
   App.Calculator.init();

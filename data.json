@@ -323,6 +323,13 @@
       "desc": "",
       "category": "开发资源",
       "favicon": "icons/ecnr5kgtb55g_feishu_cn.png"
+    },
+    {
+      "name": "中国移动云盘",
+      "url": "https://yun.139.com/w/#/index",
+      "desc": "",
+      "category": "网盘",
+      "favicon": ""
     }
   ]
 }

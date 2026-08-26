@@ -164,7 +164,7 @@ body::after {
 }
 
 .container {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
   position: relative;
@@ -354,6 +354,170 @@ header h1 {
 .time-bar .time { font-size: 48px; font-weight: 700; letter-spacing: -2px; color: var(--fg); line-height: 1; }
 .time-bar .date { font-size: 14px; color: var(--muted-fg); margin-top: 4px; }
 .time-bar .greeting { font-size: 16px; font-weight: 500; color: var(--fg); margin-top: 8px; opacity: 0.85; }
+
+/* ===== 左侧侧边栏布局 ===== */
+.layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-top: 28px;
+  padding-bottom: 60px;
+}
+
+.sidebar {
+  width: 236px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 20px;
+  background: var(--card-glass);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  border: 1px solid var(--card-glass-border);
+  border-radius: var(--radius-lg);
+  padding: 10px;
+  box-shadow: var(--shadow-md);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+.sidebar-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+  padding: 6px 12px 10px;
+  user-select: none;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--fg);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition);
+  margin-bottom: 2px;
+}
+
+.sidebar-item .cat-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-item:hover { background: var(--muted); }
+
+.sidebar-item.active {
+  background: var(--grad-accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-item .cat-count {
+  font-size: 11px;
+  color: var(--muted-fg);
+  background: var(--muted);
+  border-radius: 10px;
+  padding: 1px 8px;
+  flex-shrink: 0;
+}
+
+.sidebar-item.active .cat-count { background: rgba(0,82,255,0.1); color: var(--accent); }
+
+.sidebar-item .cat-actions {
+  display: none;
+  gap: 2px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+body.edit-mode .sidebar-item .cat-actions { display: flex; }
+
+.sidebar-item .cat-actions button {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-fg);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s;
+}
+
+.sidebar-item .cat-actions button:hover { color: var(--accent); border-color: var(--accent); }
+.sidebar-item .cat-actions .cat-del-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+.sidebar-add {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-fg);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.25s ease-out;
+}
+
+body.edit-mode .sidebar-add { display: flex; }
+
+.sidebar-add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0,82,255,0.03);
+}
+
+.content { flex: 1; min-width: 0; }
+
+.content-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: 16px;
+  padding-left: 2px;
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+.content-header .content-count {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  background: rgba(0,82,255,0.08);
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+[data-theme="dark"] .content-header .content-count { background: rgba(59,130,246,0.18); }
 
 .nav-sections { margin-top: 40px; padding-bottom: 60px; }
 
@@ -854,6 +1018,40 @@ footer {
   .nav-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
 }
 
+/* ===== 移动端：侧边栏退化为顶部横向分类条 ===== */
+@media (max-width: 768px) {
+  .layout { flex-direction: column; gap: 12px; margin-top: 20px; }
+  .sidebar {
+    width: 100%;
+    position: static;
+    max-height: none;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+  .sidebar::-webkit-scrollbar { display: none; }
+  .sidebar-title { display: none; }
+  .sidebar-item {
+    width: auto;
+    flex-shrink: 0;
+    margin-bottom: 0;
+    padding: 8px 14px;
+  }
+  .sidebar-item .cat-name { flex: none; }
+  .sidebar-item .cat-count { display: none; }
+  body.edit-mode .sidebar-item .cat-actions { display: none; }
+  .sidebar-add {
+    width: auto;
+    flex-shrink: 0;
+    margin-top: 0;
+    white-space: nowrap;
+  }
+  .content-header { font-size: 16px; }
+}
+
 /* ===== 系统管理弹窗样式 ===== */
 .sys-tabs {
   display: flex;
@@ -1325,7 +1523,10 @@ footer {
     <div class="greeting" id="greeting"></div>
   </div>
 
-  <div class="nav-sections" id="navSections" role="navigation" aria-label="网站导航"></div>
+  <div class="layout" id="navLayout">
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="分类导航"></aside>
+    <main class="content" id="navContent" aria-label="网站列表"></main>
+  </div>
 </div>
 
 <footer>
@@ -3561,35 +3762,7 @@ App.Search = {
       $('searchClear').classList.toggle('visible', this.value.length > 0);
       clearTimeout(self._filterTimer);
       self._filterTimer = setTimeout(function() {
-        var q = $('searchInput').value.trim().toLowerCase();
-        var cards = document.querySelectorAll('.nav-card');
-        var groups = document.querySelectorAll('.nav-group');
-        if (!q) {
-          cards.forEach(function(c) { c.classList.remove('hidden'); var n = c.querySelector('.name'); if (n) n.innerHTML = n.textContent; });
-          groups.forEach(function(g) { g.style.display = ''; });
-          return;
-        }
-        groups.forEach(function(g) {
-          var hasVisible = false;
-          g.querySelectorAll('.nav-card').forEach(function(c) {
-            var name = c.querySelector('.name');
-            var desc = c.querySelector('.desc');
-            var siteName = name ? name.textContent.toLowerCase() : '';
-            var siteDesc = desc ? desc.textContent.toLowerCase() : '';
-            if (siteName.indexOf(q) > -1 || siteDesc.indexOf(q) > -1) {
-              c.classList.remove('hidden');
-              hasVisible = true;
-              if (name && siteName.indexOf(q) > -1) {
-                var re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
-                name.innerHTML = name.textContent.replace(re, '<mark>$1</mark>');
-              } else if (name) { name.innerHTML = name.textContent; }
-            } else {
-              c.classList.add('hidden');
-              if (name) name.innerHTML = name.textContent;
-            }
-          });
-          g.style.display = hasVisible ? '' : 'none';
-        });
+        App.Render.render();
       }, 150);
     });
   }
@@ -3651,83 +3824,253 @@ App.Calculator = {
 
 /* ===== App.Render - 渲染 ===== */
 App.Render = {
-  render: function() {
-    var $ = App.Utils.$;
+  _usedCats: function() {
     var D = App.SiteManager._D;
-    var edit = App.SiteManager._edit;
-    var c = $('navSections');
-    c.innerHTML = '';
     var cats = D.categories || [], co = D.categoryOrder || [];
     var used = [];
     D.sites.forEach(function(s) { if (cats.indexOf(s.category) !== -1 && used.indexOf(s.category) === -1) used.push(s.category); });
     used.sort(function(a, b) { var ai = co.indexOf(a), bi = co.indexOf(b); if (ai < 0 && bi < 0) return 0; if (ai < 0) return 1; if (bi < 0) return -1; return ai - bi; });
+    return used;
+  },
 
-    var collapsedCats = JSON.parse(localStorage.getItem('kai_collapsed') || '[]');
+  _sitesOf: function(cat) {
+    var D = App.SiteManager._D;
+    var visits = JSON.parse(localStorage.getItem('kai_visits') || '{}');
+    var sites = D.sites.filter(function(s) { return s.category === cat; });
+    sites.sort(function(a, b) { return (visits[b.url] || 0) - (visits[a.url] || 0); });
+    return sites;
+  },
+
+  _renderCard: function(site, idx, query) {
+    var D = App.SiteManager._D;
+    var edit = App.SiteManager._edit;
+    var q = query || '';
+    var card = document.createElement('a');
+    card.className = 'nav-card';
+    card.href = site.url;
+    card.target = '_blank';
+    card.draggable = edit;
+    card.dataset.idx = idx;
+    card.addEventListener('pointerdown', function(e) {
+      var rect = card.getBoundingClientRect();
+      var ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      var size = Math.max(rect.width, rect.height);
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+      ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+      card.appendChild(ripple);
+      setTimeout(function() { if (ripple.parentNode) ripple.parentNode.removeChild(ripple); }, 600);
+    });
+    card.onclick = function(e) {
+      if (edit) { e.preventDefault(); App.SiteManager.editSite(idx); }
+      else { var visits2 = JSON.parse(localStorage.getItem('kai_visits') || '{}'); visits2[site.url] = (visits2[site.url] || 0) + 1; localStorage.setItem('kai_visits', JSON.stringify(visits2)); }
+    };
+    card.ondblclick = function(e) { if (edit) { e.preventDefault(); App.SiteManager.editSite(idx); } };
+    if (edit) {
+      card.ondragstart = function(e) { e.dataTransfer.setData('text/plain', idx); card.classList.add('dragging'); };
+      card.ondragend = function() { card.classList.remove('dragging'); document.querySelectorAll('.nav-card.drag-over').forEach(function(c2) { c2.classList.remove('drag-over'); }); };
+      card.ondragover = function(e) { e.preventDefault(); if (!card.classList.contains('dragging')) card.classList.add('drag-over'); };
+      card.ondragleave = function() { card.classList.remove('drag-over'); };
+      card.ondrop = function(e) {
+        e.preventDefault();
+        card.classList.remove('drag-over');
+        var fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+        var toIdx = idx;
+        if (fromIdx === toIdx) return;
+        var item = D.sites.splice(fromIdx, 1)[0];
+        var newTo = toIdx > fromIdx ? toIdx - 1 : toIdx;
+        D.sites.splice(newTo, 0, item);
+        App.SiteManager.push();
+        App.Render.render();
+      };
+    }
+
+    var icon = document.createElement('div');
+    icon.className = 'icon';
+    var localIcon = App.Utils.favicon(site.url);
+    if (site.favicon && site.favicon.indexOf('icons/') === 0) {
+      icon.style.background = 'var(--icon-bg)';
+      var img = document.createElement('img');
+      img.loading = 'lazy';
+      img.src = site.favicon;
+      img.alt = site.name;
+      img.onerror = function() { this.src = App.Utils.faviconRemote(site.url); this.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; }; };
+      icon.appendChild(img);
+    } else if (site.favicon) {
+      icon.style.background = 'var(--icon-bg)';
+      var img = document.createElement('img');
+      img.loading = 'lazy';
+      img.src = site.favicon;
+      img.alt = site.name;
+      img.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; };
+      icon.appendChild(img);
+    } else if (localIcon) {
+      icon.style.background = 'var(--icon-bg)';
+      var img = document.createElement('img');
+      img.loading = 'lazy';
+      img.src = localIcon;
+      img.alt = site.name;
+      img.onerror = function() { this.src = App.Utils.faviconRemote(site.url); this.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; }; };
+      icon.appendChild(img);
+    } else {
+      icon.style.background = site.emojiBg || 'var(--icon-bg)';
+      icon.style.color = site.emojiColor || 'var(--accent)';
+      icon.textContent = site.emoji || (site.name ? site.name.charAt(0).toUpperCase() : '🔗');
+      if (!site.emoji && site.name) { icon.style.fontWeight = '700'; icon.style.fontSize = '16px'; }
+    }
+    card.appendChild(icon);
+
+    var info = document.createElement('div');
+    info.className = 'info';
+    var escName = App.Utils.esc(site.name);
+    var escDesc = App.Utils.esc(site.desc || '');
+    if (q && site.name.toLowerCase().indexOf(q) > -1) {
+      var re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+      escName = escName.replace(re, '<mark>$1</mark>');
+    }
+    info.innerHTML = '<div class="name">' + escName + '</div><div class="desc">' + escDesc + '</div>';
+    card.appendChild(info);
+
+    var urlTip = document.createElement('span');
+    urlTip.className = 'url-tip';
+    urlTip.textContent = site.url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    card.appendChild(urlTip);
+
+    var acts2 = document.createElement('div');
+    acts2.className = 'card-actions';
+    [['✎', 'edit-btn', '编辑', function(e) { e.preventDefault(); e.stopPropagation(); App.SiteManager.editSite(idx); }],
+     ['×', 'delete-btn', '删除', function(e) { e.preventDefault(); e.stopPropagation(); App.SiteManager.delSite(idx); }]].forEach(function(b) {
+      var btn = document.createElement('button');
+      btn.className = b[1];
+      btn.textContent = b[0];
+      btn.title = b[2];
+      btn.onclick = b[3];
+      acts2.appendChild(btn);
+    });
+    card.appendChild(acts2);
+    return card;
+  },
+
+  render: function() {
+    var $ = App.Utils.$;
+    var D = App.SiteManager._D;
+    var edit = App.SiteManager._edit;
+    var used = this._usedCats();
+    var searchInput = $('searchInput');
+    var q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    var searching = q.length > 0;
+    var activeCat = localStorage.getItem('kai_active_cat');
+    if (used.indexOf(activeCat) === -1) activeCat = used[0] || '';
+
+    /* ===== 左侧侧边栏 ===== */
+    var sb = $('sidebar');
+    sb.innerHTML = '';
+    var st = document.createElement('div');
+    st.className = 'sidebar-title';
+    st.textContent = '全部分类';
+    sb.appendChild(st);
 
     used.forEach(function(cat) {
-      var sites = D.sites.filter(function(s) { return s.category === cat; });
-      var visits = JSON.parse(localStorage.getItem('kai_visits') || '{}');
-      sites.sort(function(a, b) { return (visits[b.url] || 0) - (visits[a.url] || 0); });
-      var g = document.createElement('div');
-      g.className = 'nav-group';
-      if (collapsedCats.indexOf(cat) > -1) g.classList.add('collapsed');
-      var t = document.createElement('div');
-      t.className = 'nav-group-title';
-
-      var arrow = document.createElement('span');
-      arrow.className = 'collapse-arrow';
-      arrow.textContent = '▼';
-      t.appendChild(arrow);
-      t.appendChild(document.createTextNode(cat));
+      var item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'sidebar-item';
+      if (!searching && cat === activeCat) item.classList.add('active');
+      var nm = document.createElement('span');
+      nm.className = 'cat-name';
+      nm.textContent = cat;
       var cnt = document.createElement('span');
       cnt.className = 'cat-count';
-      cnt.textContent = sites.length;
-      t.appendChild(cnt);
-
-      var acts = document.createElement('div');
-      acts.className = 'cat-actions';
-      [['↑', '上移', function(e) { e.stopPropagation(); App.CategoryManager.moveCat(cat, -1); }],
-       ['↓', '下移', function(e) { e.stopPropagation(); App.CategoryManager.moveCat(cat, 1); }],
-       ['✎', '重命名', function(e) { e.stopPropagation(); App.CategoryManager.renameCat(cat); }],
-       ['×', '删除', function(e) { e.stopPropagation(); App.CategoryManager.delCat(cat); }]].forEach(function(b) {
-        var btn = document.createElement('button');
-        btn.className = b[2].toString().indexOf('delCat') > -1 ? 'cat-del-btn' : 'cat-edit-btn';
-        btn.textContent = b[0];
-        btn.title = b[1];
-        btn.onclick = b[2];
-        acts.appendChild(btn);
-      });
-      t.appendChild(acts);
-      g.appendChild(t);
-
-      t.addEventListener('click', function(e) {
-        if (e.target.closest('.cat-actions')) return;
-        var gridEl = g.querySelector('.nav-grid');
-        if (g.classList.contains('collapsed')) {
-          g.classList.remove('collapsed');
-          gridEl.style.maxHeight = 'none';
-          var h = gridEl.scrollHeight;
-          gridEl.style.maxHeight = '0px';
-          gridEl.offsetHeight;
-          gridEl.style.maxHeight = h + 'px';
-          gridEl.style.opacity = '1';
-          setTimeout(function() { gridEl.style.maxHeight = 'none'; }, 360);
-        } else {
-          var h = gridEl.scrollHeight;
-          gridEl.style.maxHeight = h + 'px';
-          gridEl.offsetHeight;
-          gridEl.style.maxHeight = '0px';
-          gridEl.style.opacity = '0';
-          g.classList.add('collapsed');
+      cnt.textContent = App.Render._sitesOf(cat).length;
+      item.appendChild(nm);
+      item.appendChild(cnt);
+      if (edit) {
+        var acts = document.createElement('div');
+        acts.className = 'cat-actions';
+        [['↑', '上移', function(e) { e.stopPropagation(); App.CategoryManager.moveCat(cat, -1); }],
+         ['↓', '下移', function(e) { e.stopPropagation(); App.CategoryManager.moveCat(cat, 1); }],
+         ['✎', '重命名', function(e) { e.stopPropagation(); App.CategoryManager.renameCat(cat); }],
+         ['×', '删除', function(e) { e.stopPropagation(); App.CategoryManager.delCat(cat); }]].forEach(function(b) {
+          var btn = document.createElement('button');
+          btn.className = b[0] === '×' ? 'cat-del-btn' : 'cat-edit-btn';
+          btn.textContent = b[0];
+          btn.title = b[1];
+          btn.onclick = b[2];
+          acts.appendChild(btn);
+        });
+        item.appendChild(acts);
+      }
+      item.onclick = function() {
+        localStorage.setItem('kai_active_cat', cat);
+        if (searchInput && searchInput.value) {
+          searchInput.value = '';
+          var cl = $('searchClear');
+          if (cl) cl.classList.remove('visible');
         }
-        var cc = JSON.parse(localStorage.getItem('kai_collapsed') || '[]');
-        if (g.classList.contains('collapsed')) { if (cc.indexOf(cat) === -1) cc.push(cat); } else { cc = cc.filter(function(c2) { return c2 !== cat; }); }
-        localStorage.setItem('kai_collapsed', JSON.stringify(cc));
+        App.Render.render();
+      };
+      sb.appendChild(item);
+    });
+
+    if (edit) {
+      var add = document.createElement('button');
+      add.className = 'sidebar-add';
+      add.textContent = '+ 新建分类';
+      add.onclick = App.CategoryManager.addCat;
+      sb.appendChild(add);
+      var ab = document.createElement('button');
+      ab.className = 'sidebar-add';
+      ab.textContent = '🔑 系统管理';
+      ab.onclick = function() { App.UI.openSysModal(); };
+      sb.appendChild(ab);
+    }
+
+    /* ===== 右侧内容区 ===== */
+    var content = $('navContent');
+    content.innerHTML = '';
+    if (searching) {
+      var h = document.createElement('div');
+      h.className = 'content-header';
+      h.textContent = '搜索结果';
+      var cc = document.createElement('span');
+      cc.className = 'content-count';
+      cc.textContent = '0';
+      h.appendChild(cc);
+      content.appendChild(h);
+      var sGrid = document.createElement('div');
+      sGrid.className = 'nav-grid';
+      var matched = 0;
+      D.sites.forEach(function(site, idx) {
+        var name = (site.name || '').toLowerCase();
+        var desc = (site.desc || '').toLowerCase();
+        if (name.indexOf(q) > -1 || desc.indexOf(q) > -1) {
+          matched++;
+          sGrid.appendChild(App.Render._renderCard(site, idx, q));
+        }
       });
+      cc.textContent = matched;
+      content.appendChild(sGrid);
+      if (matched === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'empty-hint';
+        empty.textContent = '未找到与「' + q + '」相关的网站';
+        content.appendChild(empty);
+      }
+    } else {
+      var ch = document.createElement('div');
+      ch.className = 'content-header';
+      var title = document.createElement('span');
+      title.textContent = activeCat || '未分类';
+      var cc2 = document.createElement('span');
+      cc2.className = 'content-count';
+      cc2.textContent = App.Render._sitesOf(activeCat).length + ' 个网站';
+      ch.appendChild(title);
+      ch.appendChild(cc2);
+      content.appendChild(ch);
 
       var grid = document.createElement('div');
       grid.className = 'nav-grid';
-      if (g.classList.contains('collapsed')) { grid.style.maxHeight = '0px'; grid.style.opacity = '0'; }
+      var sites = App.Render._sitesOf(activeCat);
       if (sites.length === 0) {
         var hint = document.createElement('div');
         hint.className = 'empty-hint';
@@ -3735,142 +4078,16 @@ App.Render = {
         grid.appendChild(hint);
       }
       sites.forEach(function(site) {
-        var idx = D.sites.indexOf(site);
-        var card = document.createElement('a');
-        card.className = 'nav-card';
-        card.href = site.url;
-        card.target = '_blank';
-        card.draggable = edit;
-        card.dataset.idx = idx;
-        card.addEventListener('pointerdown', function(e) {
-          var rect = card.getBoundingClientRect();
-          var ripple = document.createElement('span');
-          ripple.className = 'ripple';
-          var size = Math.max(rect.width, rect.height);
-          ripple.style.width = ripple.style.height = size + 'px';
-          ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
-          ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
-          card.appendChild(ripple);
-          setTimeout(function() { if (ripple.parentNode) ripple.parentNode.removeChild(ripple); }, 600);
-        });
-        card.onclick = function(e) {
-          if (edit) { e.preventDefault(); App.SiteManager.editSite(idx); }
-          else { var visits2 = JSON.parse(localStorage.getItem('kai_visits') || '{}'); visits2[site.url] = (visits2[site.url] || 0) + 1; localStorage.setItem('kai_visits', JSON.stringify(visits2)); }
-        };
-        card.ondblclick = function(e) { if (edit) { e.preventDefault(); App.SiteManager.editSite(idx); } };
-        if (edit) {
-          card.ondragstart = function(e) { e.dataTransfer.setData('text/plain', idx); card.classList.add('dragging'); };
-          card.ondragend = function() { card.classList.remove('dragging'); document.querySelectorAll('.nav-card.drag-over').forEach(function(c2) { c2.classList.remove('drag-over'); }); };
-          card.ondragover = function(e) { e.preventDefault(); if (!card.classList.contains('dragging')) card.classList.add('drag-over'); };
-          card.ondragleave = function() { card.classList.remove('drag-over'); };
-          card.ondrop = function(e) {
-            e.preventDefault();
-            card.classList.remove('drag-over');
-            var fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
-            var toIdx = idx;
-            if (fromIdx === toIdx) return;
-            var item = D.sites.splice(fromIdx, 1)[0];
-            var newTo = toIdx > fromIdx ? toIdx - 1 : toIdx;
-            D.sites.splice(newTo, 0, item);
-            App.SiteManager.push();
-            App.Render.render();
-          };
-        }
-
-        var icon = document.createElement('div');
-        icon.className = 'icon';
-        var localIcon = App.Utils.favicon(site.url);
-        if (site.favicon && site.favicon.indexOf('icons/') === 0) {
-          icon.style.background = 'var(--icon-bg)';
-          var img = document.createElement('img');
-          img.loading = 'lazy';
-          img.src = site.favicon;
-          img.alt = site.name;
-          img.onerror = function() { this.src = App.Utils.faviconRemote(site.url); this.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; }; };
-          icon.appendChild(img);
-        } else if (site.favicon) {
-          icon.style.background = 'var(--icon-bg)';
-          var img = document.createElement('img');
-          img.loading = 'lazy';
-          img.src = site.favicon;
-          img.alt = site.name;
-          img.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; };
-          icon.appendChild(img);
-        } else if (localIcon) {
-          icon.style.background = 'var(--icon-bg)';
-          var img = document.createElement('img');
-          img.loading = 'lazy';
-          img.src = localIcon;
-          img.alt = site.name;
-          img.onerror = function() { this.src = App.Utils.faviconRemote(site.url); this.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; }; };
-          icon.appendChild(img);
-        } else {
-          icon.style.background = site.emojiBg || 'var(--icon-bg)';
-          icon.style.color = site.emojiColor || 'var(--accent)';
-          icon.textContent = site.emoji || (site.name ? site.name.charAt(0).toUpperCase() : '🔗');
-          if (!site.emoji && site.name) { icon.style.fontWeight = '700'; icon.style.fontSize = '16px'; }
-        }
-        card.appendChild(icon);
-
-        var info = document.createElement('div');
-        info.className = 'info';
-        info.innerHTML = '<div class="name">' + App.Utils.esc(site.name) + '</div><div class="desc">' + App.Utils.esc(site.desc || '') + '</div>';
-        card.appendChild(info);
-
-        var urlTip = document.createElement('span');
-        urlTip.className = 'url-tip';
-        urlTip.textContent = site.url.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        card.appendChild(urlTip);
-
-        var acts2 = document.createElement('div');
-        acts2.className = 'card-actions';
-        [['✎', 'edit-btn', '编辑', function(e) { e.preventDefault(); e.stopPropagation(); App.SiteManager.editSite(idx); }],
-         ['×', 'delete-btn', '删除', function(e) { e.preventDefault(); e.stopPropagation(); App.SiteManager.delSite(idx); }]].forEach(function(b) {
-          var btn = document.createElement('button');
-          btn.className = b[1];
-          btn.textContent = b[0];
-          btn.title = b[2];
-          btn.onclick = b[3];
-          acts2.appendChild(btn);
-        });
-        card.appendChild(acts2);
-        grid.appendChild(card);
+        grid.appendChild(App.Render._renderCard(site, D.sites.indexOf(site), ''));
       });
 
-      var add = document.createElement('button');
-      add.className = 'add-card';
-      add.textContent = '+ 添加网站';
-      add.onclick = function() { App.SiteManager.addSite(cat); };
-      grid.appendChild(add);
-      g.appendChild(grid);
-      if (!g.classList.contains('collapsed')) { grid.style.maxHeight = 'none'; grid.style.opacity = '1'; }
-      c.appendChild(g);
-    });
-
-    var ac = document.createElement('button');
-    ac.className = 'add-category-btn';
-    ac.textContent = '+ 新建分类';
-    ac.onclick = App.CategoryManager.addCat;
-    c.appendChild(ac);
-    if (edit) {
-      var ab = document.createElement('button');
-      ab.className = 'add-category-btn';
-      ab.textContent = '🔑 系统管理';
-      ab.onclick = function() { App.UI.openSysModal(); };
-      c.appendChild(ab);
+      var addB = document.createElement('button');
+      addB.className = 'add-card';
+      addB.textContent = '+ 添加网站';
+      addB.onclick = function() { App.SiteManager.addSite(activeCat); };
+      grid.appendChild(addB);
+      content.appendChild(grid);
     }
-    var allCollapsed = used.every(function(cat) { return collapsedCats.indexOf(cat) > -1; });
-    var tb = document.createElement('button');
-    tb.className = 'add-category-btn';
-    tb.textContent = allCollapsed ? '▽ 展开全部分类' : '△ 折叠全部分类';
-    tb.style.display = 'flex';
-    tb.onclick = function() {
-      var cc = [];
-      if (!allCollapsed) { used.forEach(function(cat) { cc.push(cat); }); }
-      localStorage.setItem('kai_collapsed', JSON.stringify(cc));
-      App.Render.render();
-    };
-    c.appendChild(tb);
   }
 };
 

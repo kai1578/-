@@ -58,10 +58,11 @@
       "name": "ChatGPT",
       "url": "https://chat.openai.com",
       "desc": "AI 对话助手",
-      "category": "常用工具",
+      "category": "AI",
       "emoji": "🤖",
       "emojiBg": "#F0F9FF",
-      "emojiColor": "#0284C7"
+      "emojiColor": "#0284C7",
+      "favicon": "icons/chat_openai_com.png"
     },
     {
       "name": "Canva",

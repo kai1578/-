@@ -10,7 +10,8 @@
     "NAS",
     "网盘",
     "3",
-    "机械设计资料"
+    "机械设计资料",
+    "AI"
   ],
   "categoryOrder": [
     "购物网站",
@@ -294,7 +295,7 @@
       "url": "https://chatgpt.com/",
       "desc": "",
       "category": "常用工具",
-      "favicon": ""
+      "favicon": "icons/chatgpt_com.png"
     },
     {
       "name": "人人",

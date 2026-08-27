@@ -339,6 +339,13 @@
       "desc": "",
       "category": "AI",
       "favicon": ""
+    },
+    {
+      "name": "京东",
+      "url": "https://www.jd.com/",
+      "desc": "",
+      "category": "购物网站",
+      "favicon": ""
     }
   ]
 }

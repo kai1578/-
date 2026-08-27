@@ -1128,6 +1128,49 @@ footer {
 
 .drop-zone .drop-icon { font-size: 32px; margin-bottom: 8px; }
 
+.upgrade-file-list {
+  margin: 12px 0;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  background: var(--bg);
+  display: none;
+}
+
+.upgrade-file-list.visible { display: block; }
+
+.upgrade-file-list .uf-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--fg);
+}
+
+.upgrade-file-list .uf-item:nth-child(odd) { background: var(--muted); }
+
+.upgrade-file-list .uf-item .uf-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upgrade-file-list .uf-item .uf-status {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted-fg);
+}
+
+.upgrade-file-list .uf-item .uf-status.ok { color: var(--success); }
+.upgrade-file-list .uf-item .uf-status.err { color: var(--danger); }
+.upgrade-file-list .uf-item .uf-status.run { color: var(--accent); }
+
 .icon-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -1644,14 +1687,16 @@ footer {
     <div class="sys-panel active" id="panel-upgrade">
       <div class="drop-zone" id="upgradeDropZone">
         <div class="drop-icon">📁</div>
-        <div>拖拽或点击选择新的 index.html 文件</div>
-        <input type="file" id="upgradeFileInput" accept=".html" style="display:none;">
+        <div>拖拽或点击选择文件（支持 index.html / data.json / manifest.json / version.json / icons/ / backgrounds/ 等全部文件，可多选）</div>
+        <input type="file" id="upgradeFileInput" accept=".html,.json,.png,.jpg,.jpeg,.svg,.ico,.webp,.gif,.avif" style="display:none;" multiple>
       </div>
+      <div class="upgrade-file-list" id="upgradeFileList"></div>
       <div style="text-align:center;font-size:12px;color:var(--muted-fg);">
         当前版本: <span id="upgradeCurVer"></span> <span id="upgradeNewVer"></span>
       </div>
       <div class="sys-btn-row">
         <button class="sys-btn sys-btn-primary" id="upgradeBtn" onclick="App.UpgradeManager.doUpgrade()" disabled>上传升级</button>
+        <button class="sys-btn sys-btn-secondary" id="upgradeClearBtn" onclick="App.UpgradeManager.clearFiles()">清空列表</button>
       </div>
     </div>
 
@@ -3309,50 +3354,153 @@ App.VersionManager = {
 
 /* ===== App.UpgradeManager - OTA 升级 ===== */
 App.UpgradeManager = {
-  _pendingFile: null,
+  _pendingFiles: [],
   _pendingVersion: '',
 
-  onFileSelect: function(file) {
+  _isBinary: function(name) {
+    return /\.(png|jpe?g|svg|ico|webp|gif|avif)$/i.test(name);
+  },
+
+  addFile: function(file) {
     if (!file) return;
-    var m = file.name.match(/(\d+\.\d+\.\d+)/);
-    this._pendingVersion = m ? m[1] : '';
-    var $ = App.Utils.$;
-    $('upgradeNewVer').textContent = this._pendingVersion ? '→ v' + this._pendingVersion : '→ ' + file.name;
-    $('upgradeBtn').disabled = false;
     var self = this;
+    var item = { name: file.name, path: file.name, content: '', base64: '', binary: self._isBinary(file.name), status: 'pending' };
     var reader = new FileReader();
-    reader.onload = function(e) { self._pendingFile = e.target.result; };
-    reader.readAsText(file);
+    reader.onload = function(e) {
+      if (item.binary) item.base64 = String(e.target.result).split(',')[1];
+      else item.content = e.target.result;
+      self._pendingFiles.push(item);
+      self._renderList();
+    };
+    if (item.binary) reader.readAsDataURL(file);
+    else reader.readAsText(file);
+  },
+
+  clearFiles: function() {
+    this._pendingFiles = [];
+    this._pendingVersion = '';
+    var $ = App.Utils.$;
+    $('upgradeFileList').className = 'upgrade-file-list';
+    $('upgradeNewVer').textContent = '';
+    $('upgradeBtn').disabled = true;
+  },
+
+  _renderList: function() {
+    var $ = App.Utils.$;
+    var list = $('upgradeFileList');
+    list.innerHTML = '';
+    if (this._pendingFiles.length === 0) { list.className = 'upgrade-file-list'; return; }
+    list.className = 'upgrade-file-list visible';
+    this._setVersionInfo();
+    this._pendingFiles.forEach(function(f) {
+      var row = document.createElement('div');
+      row.className = 'uf-item';
+      row.dataset.path = f.path;
+      var name = document.createElement('span');
+      name.className = 'uf-name';
+      name.textContent = f.path;
+      var st = document.createElement('span');
+      st.className = 'uf-status';
+      st.textContent = f.status === 'ok' ? '✓' : f.status === 'err' ? '✗' : f.status === 'run' ? '上传中...' : '待上传';
+      if (f.status === 'ok') st.className += ' ok';
+      if (f.status === 'err') st.className += ' err';
+      if (f.status === 'run') st.className += ' run';
+      row.appendChild(name);
+      row.appendChild(st);
+      list.appendChild(row);
+    });
+  },
+
+  _setVersionInfo: function() {
+    var $ = App.Utils.$;
+    var target = null;
+    for (var i = 0; i < this._pendingFiles.length; i++) {
+      if (this._pendingFiles[i].path === 'index.html' && this._pendingFiles[i].content) target = this._pendingFiles[i];
+    }
+    if (target) {
+      var m = target.content.match(/var VER\s*=\s*'([^']+)'/);
+      if (m && m[1]) {
+        this._pendingVersion = m[1];
+        $('upgradeNewVer').textContent = '→ v' + m[1];
+        return;
+      }
+    }
+    this._pendingVersion = '';
+    $('upgradeNewVer').textContent = '共 ' + this._pendingFiles.length + ' 个文件';
   },
 
   doUpgrade: function() {
     var self = this;
-    if (!self._pendingFile) { App.UI.toast('请先选择文件'); return; }
+    if (self._pendingFiles.length === 0) { App.UI.toast('请先选择文件'); return; }
     if (!App.ConfigManager.isConfigured()) { App.UI.toast('请先配置 GitHub Token 和仓库信息'); return; }
 
     var $ = App.Utils.$;
     var btn = $('upgradeBtn');
     btn.disabled = true;
     btn.textContent = '上传中...';
+    $('upgradeClearBtn').disabled = true;
 
-    var html = self._pendingFile;
-    var ver = self._pendingVersion || (html.match(/var VER\s*=\s*'([^']+)'/) || [, '?'])[1];
-    var msg = 'Update index.html v' + ver;
-
-    App.FileManager.writeFile('index.html', html, msg).then(function(res) {
-      if (res && res.content) {
-        App.VersionManager._versionInfo.version = ver;
-        App.VersionManager._versionInfo.updated_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
-        var vContent = JSON.stringify(App.VersionManager._versionInfo, null, 2);
-        App.FileManager.writeFile('version.json', vContent, 'Update version.json v' + ver);
-        App.UI.toast('升级成功！3秒后刷新...');
-        setTimeout(function() { location.reload(); }, 3000);
-      } else {
-        btn.disabled = false;
-        btn.textContent = '上传升级';
-        App.UI.toast('升级失败: ' + (res && res.message ? res.message : '未知错误'));
+    var findRow = function(path) {
+      var rows = document.querySelectorAll('.upgrade-file-list .uf-item');
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].dataset.path === path) return rows[i];
       }
-    });
+      return null;
+    };
+
+    var finish = function(ok, msg) {
+      btn.disabled = false;
+      btn.textContent = '上传升级';
+      $('upgradeClearBtn').disabled = false;
+      App.UI.toast(msg);
+      if (ok) {
+        setTimeout(function() { location.reload(); }, 3000);
+      }
+    };
+
+    var seq = function(i) {
+      if (i >= self._pendingFiles.length) {
+        if (self._pendingVersion) {
+          App.VersionManager._versionInfo.version = self._pendingVersion;
+          App.VersionManager._versionInfo.updated_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
+          var vContent = JSON.stringify(App.VersionManager._versionInfo, null, 2);
+          App.FileManager.writeFile('version.json', vContent, 'Update version.json v' + self._pendingVersion).then(function() {
+            finish(true, '升级成功！3秒后刷新...');
+          });
+        } else {
+          finish(true, '升级成功！3秒后刷新...');
+        }
+        return;
+      }
+      var f = self._pendingFiles[i];
+      var row = findRow(f.path);
+      var st = row ? row.querySelector('.uf-status') : null;
+      if (f.path === 'version.json') {
+        f.status = 'ok';
+        if (st) { st.textContent = '✓'; st.className = 'uf-status ok'; }
+        seq(i + 1);
+        return;
+      }
+      var uploader = f.binary
+        ? App.FileManager.uploadBinary(f.path, f.base64, 'OTA Update ' + f.path)
+        : App.FileManager.writeFile(f.path, f.content, 'OTA Update ' + f.path);
+      if (st) { st.textContent = '上传中...'; st.className = 'uf-status run'; }
+      uploader.then(function(res) {
+        var ok = !!(res && res.content);
+        f.status = ok ? 'ok' : 'err';
+        if (st) { st.textContent = ok ? '✓' : '✗'; st.className = 'uf-status ' + (ok ? 'ok' : 'err'); }
+        if (ok) {
+          seq(i + 1);
+        } else {
+          finish(false, '上传失败: ' + (res && res.message ? res.message : '未知错误'));
+        }
+      }).catch(function(e) {
+        f.status = 'err';
+        if (st) { st.textContent = '✗'; st.className = 'uf-status err'; }
+        finish(false, '上传失败: ' + (e.message || '未知错误'));
+      });
+    };
+    seq(0);
   }
 };
 
@@ -4320,7 +4468,7 @@ App.UI = {
     });
     $('backTop').addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
-    self.setupDropZone('upgradeDropZone', 'upgradeFileInput', function(file) { App.UpgradeManager.onFileSelect(file); });
+    self.setupDropZone('upgradeDropZone', 'upgradeFileInput', function(file) { App.UpgradeManager.addFile(file); }, { multiple: true });
     self.setupDropZone('iconDropZone', 'iconFileInput', function(file) { App.SiteManager.uploadIcon(file); }, { multiple: true });
     self.setupDropZone('bgDropZone', 'bgFileInput', function(file) { App.BackgroundManager.uploadFile(file); }, { multiple: true });
 

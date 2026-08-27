@@ -1052,6 +1052,31 @@ footer {
   .content-header { font-size: 16px; }
 }
 
+/* ===== 桌面端：侧边栏固定吸附在页面最左侧 ===== */
+@media (min-width: 769px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 240px;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+    border-right: 1px solid var(--card-glass-border);
+    background: var(--card-glass);
+    backdrop-filter: blur(calc(var(--blur) + 4px));
+    -webkit-backdrop-filter: blur(calc(var(--blur) + 4px));
+    padding: 28px 16px 20px;
+    z-index: 50;
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar-title { padding: 0 12px 14px; }
+  .sidebar-item { padding: 11px 12px; }
+  .layout { align-items: stretch; }
+  body { padding-left: 240px; }
+}
+
 /* ===== 系统管理弹窗样式 ===== */
 .sys-tabs {
   display: flex;

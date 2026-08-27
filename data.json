@@ -338,6 +338,13 @@
       "desc": "",
       "category": "购物网站",
       "favicon": ""
+    },
+    {
+      "name": "B站",
+      "url": "https://www.bilibili.com/",
+      "desc": "",
+      "category": "常用工具",
+      "favicon": ""
     }
   ]
 }

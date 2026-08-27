@@ -332,6 +332,13 @@
       "desc": "",
       "category": "网盘",
       "favicon": ""
+    },
+    {
+      "name": "豆包",
+      "url": "https://www.doubao.com/chat/?channel=microsoft&source=microsoft_db_14",
+      "desc": "",
+      "category": "AI",
+      "favicon": ""
     }
   ]
 }

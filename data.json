@@ -343,8 +343,8 @@
       "name": "B站",
       "url": "https://www.bilibili.com/",
       "desc": "",
-      "category": "常用工具",
-      "favicon": ""
+      "category": "视频网站",
+      "favicon": "icons/bilibili_com.png"
     }
   ]
 }

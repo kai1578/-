@@ -347,6 +347,13 @@
       "desc": "",
       "category": "视频网站",
       "favicon": "icons/bilibili_com.png"
+    },
+    {
+      "name": "超算互联网",
+      "url": "https://www.scnet.cn/ui/mall/#/mall/home",
+      "desc": "",
+      "category": "AI",
+      "favicon": ""
     }
   ]
 }

@@ -28,15 +28,6 @@
   ],
   "sites": [
     {
-      "name": "百度",
-      "url": "https://www.baidu.com",
-      "desc": "搜索引擎",
-      "category": "常用工具",
-      "emoji": "🔍",
-      "emojiBg": "#F1F5F9",
-      "emojiColor": "#0052FF"
-    },
-    {
       "name": "Google 翻译",
       "url": "https://translate.google.com",
       "desc": "多语言翻译",

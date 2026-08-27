@@ -3913,36 +3913,35 @@ App.Render = {
 
     var icon = document.createElement('div');
     icon.className = 'icon';
+    icon.style.background = 'var(--icon-bg)';
+    var candidates = [];
+    var remoteIcon = App.Utils.faviconRemote(site.url);
     var localIcon = App.Utils.favicon(site.url);
-    if (site.favicon && site.favicon.indexOf('icons/') === 0) {
-      icon.style.background = 'var(--icon-bg)';
-      var img = document.createElement('img');
-      img.loading = 'lazy';
-      img.src = site.favicon;
-      img.alt = site.name;
-      img.onerror = function() { this.src = App.Utils.faviconRemote(site.url); this.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; }; };
-      icon.appendChild(img);
-    } else if (site.favicon) {
-      icon.style.background = 'var(--icon-bg)';
-      var img = document.createElement('img');
-      img.loading = 'lazy';
-      img.src = site.favicon;
-      img.alt = site.name;
-      img.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; };
-      icon.appendChild(img);
-    } else if (localIcon) {
-      icon.style.background = 'var(--icon-bg)';
-      var img = document.createElement('img');
-      img.loading = 'lazy';
-      img.src = localIcon;
-      img.alt = site.name;
-      img.onerror = function() { this.src = App.Utils.faviconRemote(site.url); this.onerror = function() { this.parentElement.innerHTML = '<span style="font-size:18px">🔗</span>'; }; };
-      icon.appendChild(img);
-    } else {
+    if (site.favicon && site.favicon.indexOf('icons/') === 0) candidates.push(site.favicon);
+    if (site.favicon && site.favicon.indexOf('http') === 0) candidates.push(site.favicon);
+    if (localIcon && candidates.indexOf(localIcon) === -1) candidates.push(localIcon);
+    if (remoteIcon && candidates.indexOf(remoteIcon) === -1) candidates.push(remoteIcon);
+    var emojiFallback = function() {
+      if (img && img.parentNode) img.parentNode.removeChild(img);
       icon.style.background = site.emojiBg || 'var(--icon-bg)';
       icon.style.color = site.emojiColor || 'var(--accent)';
       icon.textContent = site.emoji || (site.name ? site.name.charAt(0).toUpperCase() : '🔗');
       if (!site.emoji && site.name) { icon.style.fontWeight = '700'; icon.style.fontSize = '16px'; }
+    };
+    if (candidates.length > 0) {
+      var img = document.createElement('img');
+      img.loading = 'lazy';
+      img.alt = site.name;
+      var iconIdx = 0;
+      img.src = candidates[iconIdx];
+      img.onerror = function() {
+        iconIdx++;
+        if (iconIdx < candidates.length) { img.src = candidates[iconIdx]; }
+        else { emojiFallback(); }
+      };
+      icon.appendChild(img);
+    } else {
+      emojiFallback();
     }
     card.appendChild(icon);
 

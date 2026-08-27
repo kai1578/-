@@ -297,11 +297,11 @@
       "favicon": ""
     },
     {
-      "name": "ai.luckaichat.com",
+      "name": "AI聚合网站",
       "url": "https://ai.luckaichat.com/",
       "desc": "",
-      "category": "常用工具",
-      "favicon": ""
+      "category": "AI",
+      "favicon": "icons/ai_luckaichat_com.png"
     },
     {
       "name": "tiktok",

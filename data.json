@@ -313,8 +313,8 @@
       "name": "tiktok",
       "url": "https://www.tiktok.com/foryou?lang=zh-Hans",
       "desc": "",
-      "category": "社交媒体",
-      "favicon": ""
+      "category": "视频网站",
+      "favicon": "icons/tiktok_com.png"
     },
     {
       "name": "飞书",

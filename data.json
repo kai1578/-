@@ -134,10 +134,11 @@
       "name": "哔哩哔哩",
       "url": "https://www.bilibili.com",
       "desc": "视频社区",
-      "category": "社交媒体",
+      "category": "视频网站",
       "emoji": "🎬",
       "emojiBg": "#F0F9FF",
-      "emojiColor": "#00A1D6"
+      "emojiColor": "#00A1D6",
+      "favicon": "icons/bilibili_com.png"
     },
     {
       "name": "Twitter",

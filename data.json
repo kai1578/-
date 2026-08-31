@@ -143,10 +143,11 @@
       "name": "Twitter",
       "url": "https://twitter.com",
       "desc": "全球社交",
-      "category": "社交媒体",
+      "category": "视频网站",
       "emoji": "🐦",
       "emojiBg": "#F0F9FF",
-      "emojiColor": "#1D9BF0"
+      "emojiColor": "#1D9BF0",
+      "favicon": "icons/twitter_com.png"
     },
     {
       "name": "YouTube",

@@ -9,6 +9,9 @@
 <link rel="manifest" href="manifest.json">
 <title>凯 - 个人导航</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.google.com" crossorigin>
+<link rel="preload" href="data.json" as="fetch" crossorigin="anonymous">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -418,6 +421,14 @@ header h1 {
 }
 
 .sidebar-item:hover { background: var(--muted); }
+
+.sidebar-item.dragging { opacity: 0.45; }
+
+.sidebar-item.drag-over {
+  background: var(--grad-accent-soft);
+  border-color: var(--accent);
+  border-style: dashed;
+}
 
 .sidebar-item.active {
   background: var(--grad-accent-soft);
@@ -1687,8 +1698,12 @@ footer {
     <div class="sys-panel active" id="panel-upgrade">
       <div class="drop-zone" id="upgradeDropZone">
         <div class="drop-icon">📁</div>
-        <div>拖拽或点击选择文件（支持 index.html / data.json / manifest.json / version.json / icons/ / backgrounds/ 等全部文件，可多选）</div>
+        <div>拖拽或点击选择文件（支持 index.html / data.json / manifest.json / version.json / icons/ / backgrounds/ 等，可多选）</div>
         <input type="file" id="upgradeFileInput" accept=".html,.json,.png,.jpg,.jpeg,.svg,.ico,.webp,.gif,.avif" style="display:none;" multiple>
+      </div>
+      <div class="sys-btn-row">
+        <button class="sys-btn sys-btn-secondary" onclick="App.UpgradeManager.chooseFolder()">📂 选择文件夹上传</button>
+        <input type="file" id="upgradeDirInput" webkitdirectory directory multiple style="display:none;" onchange="App.UpgradeManager.handleFolder(this)">
       </div>
       <div class="upgrade-file-list" id="upgradeFileList"></div>
       <div style="text-align:center;font-size:12px;color:var(--muted-fg);">
@@ -2791,7 +2806,33 @@ App.FnNasManager = {
         };
         actions.appendChild(addBtn);
         item.appendChild(actions);
-        item.onclick = function() {
+if (edit) {
+        item.draggable = true;
+        item.title = '拖拽调整顺序';
+        item.ondragstart = function(e) {
+          e.dataTransfer.setData('text/plain', cat);
+          item.classList.add('dragging');
+          if (e.dataTransfer.setDragImage && typeof e.dataTransfer.setDragImage === 'function') {
+            try { e.dataTransfer.setDragImage(item, 20, 20); } catch (err) {}
+          }
+        };
+        item.ondragend = function() {
+          item.classList.remove('dragging');
+          document.querySelectorAll('.sidebar-item.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
+        };
+        item.ondragover = function(e) {
+          e.preventDefault();
+          if (!item.classList.contains('dragging')) item.classList.add('drag-over');
+        };
+        item.ondragleave = function() { item.classList.remove('drag-over'); };
+        item.ondrop = function(e) {
+          e.preventDefault();
+          item.classList.remove('drag-over');
+          var fromCat = e.dataTransfer.getData('text/plain');
+          App.CategoryManager.moveCatTo(fromCat, cat);
+        };
+      }
+      item.onclick = function() {
           App.BackgroundManager.addImage(img.url, img.name, 'nas');
           App.UI.toast('已添加: ' + img.name);
         };
@@ -3361,10 +3402,22 @@ App.UpgradeManager = {
     return /\.(png|jpe?g|svg|ico|webp|gif|avif)$/i.test(name);
   },
 
-  addFile: function(file) {
+  _shouldInclude: function(path) {
+    if (!path) return false;
+    var p = String(path).replace(/\\/g, '/');
+    if (p.indexOf('.git/') === 0 || p === '.git' || p.indexOf('.github/') === 0) return false;
+    if (p.indexOf('node_modules/') === 0) return false;
+    if (p === 'index.html' || p === 'data.json' || p === 'manifest.json' || p === 'version.json' || p === 'README.md') return true;
+    if (p.indexOf('icons/') === 0 || p.indexOf('backgrounds/') === 0) return true;
+    return false;
+  },
+
+  addFile: function(file, relPath) {
     if (!file) return;
+    var path = (relPath || file.name).replace(/\\/g, '/');
+    if (!this._shouldInclude(path)) return;
     var self = this;
-    var item = { name: file.name, path: file.name, content: '', base64: '', binary: self._isBinary(file.name), status: 'pending' };
+    var item = { name: file.name, path: path, content: '', base64: '', binary: self._isBinary(path), status: 'pending' };
     var reader = new FileReader();
     reader.onload = function(e) {
       if (item.binary) item.base64 = String(e.target.result).split(',')[1];
@@ -3374,6 +3427,31 @@ App.UpgradeManager = {
     };
     if (item.binary) reader.readAsDataURL(file);
     else reader.readAsText(file);
+  },
+
+  chooseFolder: function() {
+    var $ = App.Utils.$;
+    this.clearFiles();
+    $('upgradeDirInput').value = '';
+    $('upgradeDirInput').click();
+  },
+
+  handleFolder: function(input) {
+    if (!input || !input.files || input.files.length === 0) return;
+    var self = this;
+    var files = input.files;
+    var added = 0;
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      var rel = f.webkitRelativePath || '';
+      if (rel) rel = rel.split('/').slice(1).join('/');
+      var path = rel || f.name;
+      if (self._shouldInclude(path)) {
+        self.addFile(f, path);
+        added++;
+      }
+    }
+    if (added === 0) App.UI.toast('文件夹中没有可上传的文件');
   },
 
   clearFiles: function() {
@@ -3392,6 +3470,7 @@ App.UpgradeManager = {
     if (this._pendingFiles.length === 0) { list.className = 'upgrade-file-list'; return; }
     list.className = 'upgrade-file-list visible';
     this._setVersionInfo();
+    $('upgradeBtn').disabled = false;
     this._pendingFiles.forEach(function(f) {
       var row = document.createElement('div');
       row.className = 'uf-item';
@@ -3829,6 +3908,28 @@ App.CategoryManager = {
     App.Render.render();
   },
 
+  moveCatTo: function(fromName, toName) {
+    if (!fromName || !toName || fromName === toName) return;
+    var D = App.SiteManager._D;
+    var co = D.categoryOrder || [];
+    D.categories.forEach(function(c) { if (co.indexOf(c) === -1) co.push(c); });
+    D.categoryOrder = co;
+    var usedCats = [];
+    D.sites.forEach(function(s) { if (co.indexOf(s.category) !== -1 && usedCats.indexOf(s.category) === -1) usedCats.push(s.category); });
+    usedCats.sort(function(a, b) { return co.indexOf(a) - co.indexOf(b); });
+    var fi = usedCats.indexOf(fromName);
+    var ti = usedCats.indexOf(toName);
+    if (fi < 0 || ti < 0) return;
+    usedCats.splice(fi, 1);
+    var adjusted = usedCats.indexOf(toName);
+    if (fi < ti) usedCats.splice(adjusted + 1, 0, fromName);
+    else usedCats.splice(adjusted, 0, fromName);
+    var newCo = usedCats.concat(co.filter(function(c) { return usedCats.indexOf(c) === -1; }));
+    D.categoryOrder = newCo;
+    App.SiteManager.push();
+    App.Render.render();
+  },
+
   addCat: function() {
     var $ = App.Utils.$;
     $('catModalTitle').textContent = '新建分类';
@@ -3997,6 +4098,69 @@ App.Calculator = {
 
 /* ===== App.Render - 渲染 ===== */
 App.Render = {
+  _iconJobs: [],
+  _iconActive: 0,
+  _iconScheduled: false,
+
+  _iconCandidates: function(site) {
+    var c = [];
+    var remoteIcon = App.Utils.faviconRemote(site.url);
+    var localIcon = App.Utils.favicon(site.url);
+    if (site.favicon && site.favicon.indexOf('icons/') === 0) c.push(site.favicon);
+    if (site.favicon && site.favicon.indexOf('http') === 0) c.push(site.favicon);
+    if (localIcon && c.indexOf(localIcon) === -1) c.push(localIcon);
+    if (remoteIcon && c.indexOf(remoteIcon) === -1) c.push(remoteIcon);
+    return c;
+  },
+
+  _iconQueueTick: function() {
+    var self = this;
+    while (self._iconActive < 3 && self._iconJobs.length > 0) {
+      var job = self._iconJobs.shift();
+      self._iconActive++;
+      (function(job) {
+        var candidates = self._iconCandidates(job.site);
+        var idx = 0;
+        var iconEl = job.iconEl;
+        var tryNext = function() {
+          if (idx >= candidates.length) {
+            self._iconActive--;
+            self._iconQueueTick();
+            return;
+          }
+          var img = document.createElement('img');
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.alt = job.site.name;
+          img.onload = function() {
+            iconEl.textContent = '';
+            iconEl.style.background = 'var(--icon-bg)';
+            iconEl.style.color = '';
+            iconEl.appendChild(img);
+            self._iconActive--;
+            self._iconQueueTick();
+          };
+          img.onerror = function() {
+            idx++;
+            tryNext();
+          };
+          img.src = candidates[idx];
+        };
+        tryNext();
+      })(job);
+    }
+  },
+
+  _scheduleIconLoad: function() {
+    if (this._iconScheduled || this._iconJobs.length === 0) return;
+    this._iconScheduled = true;
+    var self = this;
+    setTimeout(function() {
+      self._iconScheduled = false;
+      self._iconQueueTick();
+    }, 400);
+  },
+
   _usedCats: function() {
     var D = App.SiteManager._D;
     var cats = D.categories || [], co = D.categoryOrder || [];
@@ -4061,37 +4225,12 @@ App.Render = {
 
     var icon = document.createElement('div');
     icon.className = 'icon';
-    icon.style.background = 'var(--icon-bg)';
-    var candidates = [];
-    var remoteIcon = App.Utils.faviconRemote(site.url);
-    var localIcon = App.Utils.favicon(site.url);
-    if (site.favicon && site.favicon.indexOf('icons/') === 0) candidates.push(site.favicon);
-    if (site.favicon && site.favicon.indexOf('http') === 0) candidates.push(site.favicon);
-    if (localIcon && candidates.indexOf(localIcon) === -1) candidates.push(localIcon);
-    if (remoteIcon && candidates.indexOf(remoteIcon) === -1) candidates.push(remoteIcon);
-    var emojiFallback = function() {
-      if (img && img.parentNode) img.parentNode.removeChild(img);
-      icon.style.background = site.emojiBg || 'var(--icon-bg)';
-      icon.style.color = site.emojiColor || 'var(--accent)';
-      icon.textContent = site.emoji || (site.name ? site.name.charAt(0).toUpperCase() : '🔗');
-      if (!site.emoji && site.name) { icon.style.fontWeight = '700'; icon.style.fontSize = '16px'; }
-    };
-    if (candidates.length > 0) {
-      var img = document.createElement('img');
-      img.loading = 'lazy';
-      img.alt = site.name;
-      var iconIdx = 0;
-      img.src = candidates[iconIdx];
-      img.onerror = function() {
-        iconIdx++;
-        if (iconIdx < candidates.length) { img.src = candidates[iconIdx]; }
-        else { emojiFallback(); }
-      };
-      icon.appendChild(img);
-    } else {
-      emojiFallback();
-    }
+    icon.style.background = site.emojiBg || 'var(--icon-bg)';
+    icon.style.color = site.emojiColor || 'var(--accent)';
+    icon.textContent = site.emoji || (site.name ? site.name.charAt(0).toUpperCase() : '🔗');
+    if (!site.emoji && site.name) { icon.style.fontWeight = '700'; icon.style.fontSize = '16px'; }
     card.appendChild(icon);
+    App.Render._iconJobs.push({ iconEl: icon, site: site });
 
     var info = document.createElement('div');
     info.className = 'info';
@@ -4128,6 +4267,8 @@ App.Render = {
     var $ = App.Utils.$;
     var D = App.SiteManager._D;
     var edit = App.SiteManager._edit;
+    this._iconJobs = [];
+    this._iconActive = 0;
     var used = this._usedCats();
     var searchInput = $('searchInput');
     var q = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -4260,6 +4401,7 @@ App.Render = {
       grid.appendChild(addB);
       content.appendChild(grid);
     }
+    this._scheduleIconLoad();
   }
 };
 

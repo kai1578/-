@@ -10,26 +10,31 @@
     "NAS",
     "网盘",
     "3",
-    "机械设计资料",
-    "AI",
-    "视频网站"
+    "机械设计资料"
   ],
   "categoryOrder": [
     "购物网站",
-    "视频网站",
     "开发资源",
     "常用工具",
     "社交媒体",
-    "自定义",
     "学习教育",
+    "自定义",
     "效率工具",
     "NAS",
     "机械设计资料",
     "网盘",
-    "3",
-    "AI"
+    "3"
   ],
   "sites": [
+    {
+      "name": "百度",
+      "url": "https://www.baidu.com",
+      "desc": "搜索引擎",
+      "category": "常用工具",
+      "emoji": "🔍",
+      "emojiBg": "#F1F5F9",
+      "emojiColor": "#0052FF"
+    },
     {
       "name": "Google 翻译",
       "url": "https://translate.google.com",
@@ -52,11 +57,10 @@
       "name": "ChatGPT",
       "url": "https://chat.openai.com",
       "desc": "AI 对话助手",
-      "category": "AI",
+      "category": "常用工具",
       "emoji": "🤖",
       "emojiBg": "#F0F9FF",
-      "emojiColor": "#0284C7",
-      "favicon": "icons/chat_openai_com.png"
+      "emojiColor": "#0284C7"
     },
     {
       "name": "Canva",
@@ -134,31 +138,28 @@
       "name": "哔哩哔哩",
       "url": "https://www.bilibili.com",
       "desc": "视频社区",
-      "category": "视频网站",
+      "category": "社交媒体",
       "emoji": "🎬",
       "emojiBg": "#F0F9FF",
-      "emojiColor": "#00A1D6",
-      "favicon": "icons/bilibili_com.png"
+      "emojiColor": "#00A1D6"
     },
     {
       "name": "Twitter",
       "url": "https://twitter.com",
       "desc": "全球社交",
-      "category": "视频网站",
+      "category": "社交媒体",
       "emoji": "🐦",
       "emojiBg": "#F0F9FF",
-      "emojiColor": "#1D9BF0",
-      "favicon": "icons/twitter_com.png"
+      "emojiColor": "#1D9BF0"
     },
     {
       "name": "YouTube",
       "url": "https://www.youtube.com",
       "desc": "全球视频",
-      "category": "视频网站",
+      "category": "社交媒体",
       "emoji": "▶️",
       "emojiBg": "#FFF7ED",
-      "emojiColor": "#FF0000",
-      "favicon": "icons/youtube_com.png"
+      "emojiColor": "#FF0000"
     },
     {
       "name": "Coursera",
@@ -292,8 +293,8 @@
       "name": "gpt",
       "url": "https://chatgpt.com/",
       "desc": "",
-      "category": "AI",
-      "favicon": "icons/chatgpt_com.png"
+      "category": "常用工具",
+      "favicon": ""
     },
     {
       "name": "人人",
@@ -303,18 +304,18 @@
       "favicon": ""
     },
     {
-      "name": "AI聚合网站",
+      "name": "ai.luckaichat.com",
       "url": "https://ai.luckaichat.com/",
       "desc": "",
-      "category": "AI",
-      "favicon": "icons/ai_luckaichat_com.png"
+      "category": "常用工具",
+      "favicon": ""
     },
     {
       "name": "tiktok",
       "url": "https://www.tiktok.com/foryou?lang=zh-Hans",
       "desc": "",
-      "category": "视频网站",
-      "favicon": "icons/tiktok_com.png"
+      "category": "社交媒体",
+      "favicon": ""
     },
     {
       "name": "飞书",
@@ -328,34 +329,6 @@
       "url": "https://yun.139.com/w/#/index",
       "desc": "",
       "category": "网盘",
-      "favicon": ""
-    },
-    {
-      "name": "豆包",
-      "url": "https://www.doubao.com/chat/?channel=microsoft&source=microsoft_db_14",
-      "desc": "",
-      "category": "AI",
-      "favicon": ""
-    },
-    {
-      "name": "京东",
-      "url": "https://www.jd.com/",
-      "desc": "",
-      "category": "购物网站",
-      "favicon": ""
-    },
-    {
-      "name": "B站",
-      "url": "https://www.bilibili.com/",
-      "desc": "",
-      "category": "视频网站",
-      "favicon": "icons/bilibili_com.png"
-    },
-    {
-      "name": "超算互联网",
-      "url": "https://www.scnet.cn/ui/mall/#/mall/home",
-      "desc": "",
-      "category": "AI",
       "favicon": ""
     }
   ]

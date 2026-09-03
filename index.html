@@ -1181,6 +1181,7 @@ footer {
 .upgrade-file-list .uf-item .uf-status.ok { color: var(--success); }
 .upgrade-file-list .uf-item .uf-status.err { color: var(--danger); }
 .upgrade-file-list .uf-item .uf-status.run { color: var(--accent); }
+.upgrade-file-list .uf-item .uf-status.skip { color: var(--warning, #f59e0b); }
 
 .icon-grid {
   display: grid;
@@ -1698,7 +1699,7 @@ footer {
     <div class="sys-panel active" id="panel-upgrade">
       <div class="drop-zone" id="upgradeDropZone">
         <div class="drop-icon">📁</div>
-        <div>拖拽或点击选择文件（支持 index.html / data.json / manifest.json / version.json / icons/ / backgrounds/ 等，可多选）</div>
+        <div>拖拽或点击选择文件（支持 index.html / manifest.json / icons/ / backgrounds/ 等，可多选）<br><strong style="color:var(--warning,#f59e0b)">注意：data.json 会被自动跳过以保留你当前的网址数据</strong></div>
         <input type="file" id="upgradeFileInput" accept=".html,.json,.png,.jpg,.jpeg,.svg,.ico,.webp,.gif,.avif" style="display:none;" multiple>
       </div>
       <div class="sys-btn-row">
@@ -3557,6 +3558,12 @@ App.UpgradeManager = {
       if (f.path === 'version.json') {
         f.status = 'ok';
         if (st) { st.textContent = '✓'; st.className = 'uf-status ok'; }
+        seq(i + 1);
+        return;
+      }
+      if (f.path === 'data.json') {
+        f.status = 'skip';
+        if (st) { st.textContent = '跳过'; st.className = 'uf-status skip'; }
         seq(i + 1);
         return;
       }

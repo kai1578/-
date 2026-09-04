@@ -2807,33 +2807,7 @@ App.FnNasManager = {
         };
         actions.appendChild(addBtn);
         item.appendChild(actions);
-if (edit) {
-        item.draggable = true;
-        item.title = '拖拽调整顺序';
-        item.ondragstart = function(e) {
-          e.dataTransfer.setData('text/plain', cat);
-          item.classList.add('dragging');
-          if (e.dataTransfer.setDragImage && typeof e.dataTransfer.setDragImage === 'function') {
-            try { e.dataTransfer.setDragImage(item, 20, 20); } catch (err) {}
-          }
-        };
-        item.ondragend = function() {
-          item.classList.remove('dragging');
-          document.querySelectorAll('.sidebar-item.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
-        };
-        item.ondragover = function(e) {
-          e.preventDefault();
-          if (!item.classList.contains('dragging')) item.classList.add('drag-over');
-        };
-        item.ondragleave = function() { item.classList.remove('drag-over'); };
-        item.ondrop = function(e) {
-          e.preventDefault();
-          item.classList.remove('drag-over');
-          var fromCat = e.dataTransfer.getData('text/plain');
-          App.CategoryManager.moveCatTo(fromCat, cat);
-        };
-      }
-      item.onclick = function() {
+        item.onclick = function() {
           App.BackgroundManager.addImage(img.url, img.name, 'nas');
           App.UI.toast('已添加: ' + img.name);
         };
@@ -4319,6 +4293,32 @@ App.Render = {
           acts.appendChild(btn);
         });
         item.appendChild(acts);
+
+        /* 拖拽排序 */
+        item.draggable = true;
+        item.ondragstart = function(e) {
+          e.dataTransfer.setData('text/plain', cat);
+          item.classList.add('dragging');
+          if (e.dataTransfer.setDragImage && typeof e.dataTransfer.setDragImage === 'function') {
+            try { e.dataTransfer.setDragImage(item, 20, 20); } catch (err) {}
+          }
+        };
+        item.ondragend = function() {
+          item.classList.remove('dragging');
+          document.querySelectorAll('.sidebar-item.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
+        };
+        item.ondragover = function(e) {
+          e.preventDefault();
+          if (!item.classList.contains('dragging')) item.classList.add('drag-over');
+        };
+        item.ondragleave = function() { item.classList.remove('drag-over'); };
+        item.ondrop = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          item.classList.remove('drag-over');
+          var fromCat = e.dataTransfer.getData('text/plain');
+          App.CategoryManager.moveCatTo(fromCat, cat);
+        };
       }
       item.onclick = function() {
         localStorage.setItem('kai_active_cat', cat);

@@ -476,16 +476,25 @@ header h1 {
 }
 .clock-city {
   position: absolute;
-  bottom: 16%;
+  bottom: 14%;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--muted-fg);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg);
   white-space: nowrap;
-  pointer-events: none;
+  cursor: pointer;
   z-index: 8;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: opacity 0.15s, text-shadow 0.15s;
+}
+.clock-city:hover {
+  opacity: 0.85;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5), 0 0 8px rgba(255,255,255,0.3);
 }
 .time-bar .date { font-size: 14px; color: var(--muted-fg); margin-top: 12px; }
 .time-bar .greeting { font-size: 16px; font-weight: 500; color: var(--fg); margin-top: 4px; opacity: 0.85; }
@@ -4320,6 +4329,156 @@ App.Weather = {
     99: { type: 'storm', intensity: 1.0 }
   },
 
+  // 内置中国区县坐标字典，确保常用区县可搜（外部API对区县支持差）
+  _localPlaces: [
+    // 江苏省
+    { name: '南京', lat: 32.0603, lon: 118.7969, admin1: '江苏省' },
+    { name: '苏州', lat: 31.2989, lon: 120.5853, admin1: '江苏省' },
+    { name: '无锡', lat: 31.4912, lon: 120.3119, admin1: '江苏省' },
+    { name: '常州', lat: 31.7727, lon: 119.9469, admin1: '江苏省' },
+    { name: '徐州', lat: 34.2610, lon: 117.1850, admin1: '江苏省' },
+    { name: '南通', lat: 32.0162, lon: 120.8646, admin1: '江苏省' },
+    { name: '连云港', lat: 34.5967, lon: 119.2216, admin1: '江苏省' },
+    { name: '赣榆', lat: 34.8458, lon: 119.0123, admin1: '江苏省连云港市' },
+    { name: '赣榆县', lat: 34.8458, lon: 119.0123, admin1: '江苏省连云港市' },
+    { name: '赣榆区', lat: 34.8458, lon: 119.0123, admin1: '江苏省连云港市' },
+    { name: '淮安', lat: 33.6104, lon: 119.0153, admin1: '江苏省' },
+    { name: '盐城', lat: 33.3776, lon: 120.1399, admin1: '江苏省' },
+    { name: '扬州', lat: 32.3935, lon: 119.4129, admin1: '江苏省' },
+    { name: '镇江', lat: 32.1878, lon: 119.4250, admin1: '江苏省' },
+    { name: '泰州', lat: 32.4558, lon: 119.9229, admin1: '江苏省' },
+    { name: '宿迁', lat: 33.9632, lon: 118.2755, admin1: '江苏省' },
+    { name: '昆山', lat: 31.3819, lon: 120.9580, admin1: '江苏省苏州市' },
+    { name: '江阴', lat: 31.9135, lon: 120.2887, admin1: '江苏省无锡市' },
+    { name: '张家港', lat: 31.8701, lon: 120.5552, admin1: '江苏省苏州市' },
+    { name: '常熟', lat: 31.6542, lon: 120.7485, admin1: '江苏省苏州市' },
+    { name: '宜兴', lat: 31.3623, lon: 119.8233, admin1: '江苏省无锡市' },
+    { name: '邳州', lat: 34.3194, lon: 117.9642, admin1: '江苏省徐州市' },
+    { name: '新沂', lat: 34.3836, lon: 118.3446, admin1: '江苏省徐州市' },
+    { name: '东海', lat: 34.5340, lon: 118.7729, admin1: '江苏省连云港市' },
+    { name: '灌云', lat: 34.2976, lon: 119.2300, admin1: '江苏省连云港市' },
+    { name: '灌南', lat: 34.1447, lon: 119.3560, admin1: '江苏省连云港市' },
+    // 浙江省
+    { name: '杭州', lat: 30.2741, lon: 120.1551, admin1: '浙江省' },
+    { name: '宁波', lat: 29.8683, lon: 121.5440, admin1: '浙江省' },
+    { name: '温州', lat: 28.0002, lon: 120.6721, admin1: '浙江省' },
+    { name: '绍兴', lat: 30.0302, lon: 120.5820, admin1: '浙江省' },
+    { name: '嘉兴', lat: 30.7536, lon: 120.7555, admin1: '浙江省' },
+    { name: '金华', lat: 29.0789, lon: 119.6474, admin1: '浙江省' },
+    { name: '台州', lat: 28.6564, lon: 121.4208, admin1: '浙江省' },
+    { name: '湖州', lat: 30.8943, lon: 120.0868, admin1: '浙江省' },
+    { name: '丽水', lat: 28.4672, lon: 119.9228, admin1: '浙江省' },
+    { name: '衢州', lat: 28.9712, lon: 118.8726, admin1: '浙江省' },
+    { name: '义乌', lat: 29.3060, lon: 120.0740, admin1: '浙江省金华市' },
+    { name: '余姚', lat: 30.0481, lon: 121.1498, admin1: '浙江省宁波市' },
+    { name: '慈溪', lat: 30.1687, lon: 121.2668, admin1: '浙江省宁波市' },
+    // 广东省
+    { name: '广州', lat: 23.1291, lon: 113.2644, admin1: '广东省' },
+    { name: '深圳', lat: 22.5431, lon: 114.0579, admin1: '广东省' },
+    { name: '珠海', lat: 22.2707, lon: 113.5767, admin1: '广东省' },
+    { name: '佛山', lat: 23.0218, lon: 113.1219, admin1: '广东省' },
+    { name: '东莞', lat: 23.0207, lon: 113.7518, admin1: '广东省' },
+    { name: '中山', lat: 22.5176, lon: 113.3927, admin1: '广东省' },
+    { name: '惠州', lat: 23.1115, lon: 114.4152, admin1: '广东省' },
+    { name: '汕头', lat: 23.3540, lon: 116.6818, admin1: '广东省' },
+    { name: '湛江', lat: 21.2707, lon: 110.3594, admin1: '广东省' },
+    { name: '茂名', lat: 21.6632, lon: 110.9254, admin1: '广东省' },
+    { name: '肇庆', lat: 23.0515, lon: 112.4654, admin1: '广东省' },
+    { name: '江门', lat: 22.5787, lon: 113.0815, admin1: '广东省' },
+    { name: '清远', lat: 23.6819, lon: 113.0579, admin1: '广东省' },
+    { name: '潮州', lat: 23.6566, lon: 116.6227, admin1: '广东省' },
+    { name: '揭阳', lat: 23.5497, lon: 116.3729, admin1: '广东省' },
+    // 上海市
+    { name: '上海', lat: 31.2304, lon: 121.4737, admin1: '上海市' },
+    { name: '浦东', lat: 31.2211, lon: 121.5440, admin1: '上海市' },
+    { name: '崇明', lat: 31.6236, lon: 121.3975, admin1: '上海市' },
+    // 北京市
+    { name: '北京', lat: 39.9042, lon: 116.4074, admin1: '北京市' },
+    { name: '通州', lat: 39.9024, lon: 116.6586, admin1: '北京市' },
+    { name: '昌平', lat: 40.2180, lon: 116.2312, admin1: '北京市' },
+    // 天津市
+    { name: '天津', lat: 39.3434, lon: 117.3616, admin1: '天津市' },
+    // 重庆市
+    { name: '重庆', lat: 29.5630, lon: 106.5516, admin1: '重庆市' },
+    // 四川省
+    { name: '成都', lat: 30.5728, lon: 104.0668, admin1: '四川省' },
+    { name: '绵阳', lat: 31.4640, lon: 104.6792, admin1: '四川省' },
+    { name: '德阳', lat: 31.1270, lon: 104.3987, admin1: '四川省' },
+    { name: '宜宾', lat: 28.7602, lon: 104.6417, admin1: '四川省' },
+    // 湖北省
+    { name: '武汉', lat: 30.5928, lon: 114.3055, admin1: '湖北省' },
+    { name: '宜昌', lat: 30.6919, lon: 111.2864, admin1: '湖北省' },
+    { name: '襄阳', lat: 32.0090, lon: 112.1227, admin1: '湖北省' },
+    // 湖南省
+    { name: '长沙', lat: 28.2278, lon: 112.9388, admin1: '湖南省' },
+    { name: '株洲', lat: 27.8274, lon: 113.1340, admin1: '湖南省' },
+    { name: '湘潭', lat: 27.8298, lon: 112.9442, admin1: '湖南省' },
+    // 河南省
+    { name: '郑州', lat: 34.7466, lon: 113.6253, admin1: '河南省' },
+    { name: '洛阳', lat: 34.6187, lon: 112.4540, admin1: '河南省' },
+    { name: '开封', lat: 34.7971, lon: 114.3082, admin1: '河南省' },
+    { name: '南阳', lat: 33.0047, lon: 112.5283, admin1: '河南省' },
+    // 山东省
+    { name: '济南', lat: 36.6512, lon: 117.1201, admin1: '山东省' },
+    { name: '青岛', lat: 36.0671, lon: 120.3826, admin1: '山东省' },
+    { name: '烟台', lat: 37.4638, lon: 121.4478, admin1: '山东省' },
+    { name: '潍坊', lat: 36.7069, lon: 119.1618, admin1: '山东省' },
+    { name: '临沂', lat: 35.1045, lon: 118.3564, admin1: '山东省' },
+    // 河北省
+    { name: '石家庄', lat: 38.0428, lon: 114.5149, admin1: '河北省' },
+    { name: '唐山', lat: 39.6243, lon: 118.1945, admin1: '河北省' },
+    // 辽宁省
+    { name: '沈阳', lat: 41.8057, lon: 123.4315, admin1: '辽宁省' },
+    { name: '大连', lat: 38.9140, lon: 121.6147, admin1: '辽宁省' },
+    // 吉林省
+    { name: '长春', lat: 43.8171, lon: 125.3235, admin1: '吉林省' },
+    // 黑龙江省
+    { name: '哈尔滨', lat: 45.8038, lon: 126.5350, admin1: '黑龙江省' },
+    // 安徽省
+    { name: '合肥', lat: 31.8206, lon: 117.2272, admin1: '安徽省' },
+    { name: '芜湖', lat: 31.3526, lon: 118.4331, admin1: '安徽省' },
+    { name: '蚌埠', lat: 32.9169, lon: 117.3632, admin1: '安徽省' },
+    // 福建省
+    { name: '福州', lat: 26.0745, lon: 119.2965, admin1: '福建省' },
+    { name: '厦门', lat: 24.4798, lon: 118.0894, admin1: '福建省' },
+    { name: '泉州', lat: 24.8741, lon: 118.6757, admin1: '福建省' },
+    // 江西省
+    { name: '南昌', lat: 28.6820, lon: 115.8579, admin1: '江西省' },
+    { name: '九江', lat: 29.7051, lon: 115.9923, admin1: '江西省' },
+    // 陕西省
+    { name: '西安', lat: 34.3416, lon: 108.9398, admin1: '陕西省' },
+    { name: '咸阳', lat: 34.3330, lon: 108.7091, admin1: '陕西省' },
+    // 山西省
+    { name: '太原', lat: 37.8706, lon: 112.5489, admin1: '山西省' },
+    // 甘肃省
+    { name: '兰州', lat: 36.0611, lon: 103.8343, admin1: '甘肃省' },
+    // 云南省
+    { name: '昆明', lat: 25.0389, lon: 102.7183, admin1: '云南省' },
+    { name: '大理', lat: 25.6065, lon: 100.2676, admin1: '云南省' },
+    // 贵州省
+    { name: '贵阳', lat: 26.6477, lon: 106.6302, admin1: '贵州省' },
+    // 海南省
+    { name: '海口', lat: 20.0440, lon: 110.1998, admin1: '海南省' },
+    { name: '三亚', lat: 18.2528, lon: 109.5120, admin1: '海南省' },
+    // 青海省
+    { name: '西宁', lat: 36.6171, lon: 101.7782, admin1: '青海省' },
+    // 宁夏
+    { name: '银川', lat: 38.4872, lon: 106.2309, admin1: '宁夏回族自治区' },
+    // 新疆
+    { name: '乌鲁木齐', lat: 43.8256, lon: 87.6168, admin1: '新疆维吾尔自治区' },
+    // 西藏
+    { name: '拉萨', lat: 29.6520, lon: 91.1721, admin1: '西藏自治区' },
+    // 内蒙古
+    { name: '呼和浩特', lat: 40.8429, lon: 111.7492, admin1: '内蒙古自治区' },
+    // 广西
+    { name: '南宁', lat: 22.8170, lon: 108.3665, admin1: '广西壮族自治区' },
+    { name: '桂林', lat: 25.2742, lon: 110.2900, admin1: '广西壮族自治区' },
+    // 香港澳门台湾
+    { name: '香港', lat: 22.3193, lon: 114.1694, admin1: '香港特别行政区' },
+    { name: '澳门', lat: 22.1987, lon: 113.5439, admin1: '澳门特别行政区' },
+    { name: '台北', lat: 25.0330, lon: 121.5654, admin1: '台湾省' }
+  ],
+
   init: function() {
     this._canvas = document.getElementById('weatherCanvas');
     if (!this._canvas) return;
@@ -4422,8 +4581,13 @@ App.Weather = {
     } else if (this._ipCityName) {
       name = this._ipCityName;
     }
-    el.textContent = name;
-    el.style.display = name ? 'block' : 'none';
+    if (name) {
+      el.innerHTML = '<span style="font-size:11px;">📍</span>' + name;
+      el.style.display = 'flex';
+    } else {
+      el.innerHTML = '';
+      el.style.display = 'none';
+    }
   },
 
   _initParticles: function() {
@@ -4667,31 +4831,137 @@ App.Weather = {
     var self = this;
     var results = document.getElementById('weatherLocResults');
     results.style.display = 'block';
+
+    // 1. 优先匹配内置字典（确保常用区县可搜，不依赖外部API）
+    var localMatches = this._localPlaces.filter(function(p) {
+      return p.name.indexOf(query) >= 0 || query.indexOf(p.name) >= 0;
+    });
+    if (localMatches.length > 0) {
+      this._renderCityResults(localMatches.map(function(p) {
+        return {
+          latitude: p.lat,
+          longitude: p.lon,
+          name: p.name,
+          country: '中国',
+          admin1: p.admin1
+        };
+      }));
+      return;
+    }
+
+    // 2. 内置字典无匹配，尝试 Open-Meteo API
     results.innerHTML = '<div style="padding:8px;color:var(--muted-fg);font-size:13px;">搜索中...</div>';
 
     fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(query) + '&count=8&language=zh&format=json')
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (!d.results || d.results.length === 0) {
-          results.innerHTML = '<div style="padding:8px;color:var(--muted-fg);font-size:13px;">未找到相关城市</div>';
+          // Open-Meteo 无结果，尝试 Nominatim fallback
+          self._searchCityFallback(query);
           return;
         }
-        results.innerHTML = '';
-        d.results.forEach(function(city) {
-          var div = document.createElement('div');
-          div.style.cssText = 'padding:10px 12px;cursor:pointer;border-radius:8px;font-size:14px;transition:background 0.15s;';
-          div.innerHTML = '<strong>' + (city.name || '') + '</strong> <span style="color:var(--muted-fg);font-size:12px;">' + (city.country || '') + (city.admin1 ? ', ' + city.admin1 : '') + '</span>';
-          div.onmouseover = function() { div.style.background = 'var(--muted)'; };
-          div.onmouseout = function() { div.style.background = 'transparent'; };
-          div.onclick = function() {
-            self._selectLocation(city.latitude, city.longitude, city.name + (city.admin1 ? ', ' + city.admin1 : '') + (city.country ? ', ' + city.country : ''));
+        self._renderCityResults(d.results.map(function(c) {
+          return {
+            latitude: c.latitude,
+            longitude: c.longitude,
+            name: c.name,
+            country: c.country,
+            admin1: c.admin1
           };
-          results.appendChild(div);
+        }));
+      })
+      .catch(function() {
+        // Open-Meteo 失败，也尝试 fallback
+        self._searchCityFallback(query);
+      });
+  },
+
+  _searchCityFallback: function(query) {
+    var self = this;
+    var results = document.getElementById('weatherLocResults');
+    results.innerHTML = '<div style="padding:8px;color:var(--muted-fg);font-size:13px;">备用搜索中...</div>';
+
+    // 使用 Photon API (Komoot) 作为备用，对中国区县支持更好
+    fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(query) + '&limit=8&lang=zh')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d || !d.features || d.features.length === 0) {
+          // Photon 也无结果，尝试 Nominatim
+          self._searchCityNominatim(query);
+          return;
+        }
+        var list = d.features.map(function(f) {
+          var props = f.properties || {};
+          var name = props.name || props.city || props.county || props.state || '';
+          var admin1 = props.state || props.region || '';
+          var country = props.country || '';
+          return {
+            latitude: f.geometry.coordinates[1],
+            longitude: f.geometry.coordinates[0],
+            name: name,
+            country: country,
+            admin1: admin1
+          };
         });
+        self._renderCityResults(list);
+      })
+      .catch(function() {
+        self._searchCityNominatim(query);
+      });
+  },
+
+  _searchCityNominatim: function(query) {
+    var self = this;
+    var results = document.getElementById('weatherLocResults');
+    results.innerHTML = '<div style="padding:8px;color:var(--muted-fg);font-size:13px;">备用搜索中...</div>';
+
+    fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(query) + '&format=json&limit=8&accept-language=zh', {
+      headers: { 'Accept-Language': 'zh-CN,zh;q=0.9' }
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d || d.length === 0) {
+          results.innerHTML = '<div style="padding:8px;color:var(--muted-fg);font-size:13px;">未找到相关城市，请尝试更短的关键词（如"赣榆"、"连云港"）</div>';
+          return;
+        }
+        var list = d.map(function(c) {
+          var parts = (c.display_name || '').split(',').map(function(s) { return s.trim(); });
+          var name = parts[0] || c.display_name;
+          var admin1 = parts.length > 2 ? parts[1] : '';
+          var country = parts.length > 3 ? parts[parts.length - 1] : '';
+          return {
+            latitude: parseFloat(c.lat),
+            longitude: parseFloat(c.lon),
+            name: name,
+            country: country,
+            admin1: admin1
+          };
+        });
+        self._renderCityResults(list);
       })
       .catch(function() {
         results.innerHTML = '<div style="padding:8px;color:var(--danger,#ef4444);font-size:13px;">搜索失败，请重试</div>';
       });
+  },
+
+  _renderCityResults: function(cities) {
+    var results = document.getElementById('weatherLocResults');
+    results.innerHTML = '';
+    cities.forEach(function(city) {
+      var div = document.createElement('div');
+      div.style.cssText = 'padding:10px 12px;cursor:pointer;border-radius:8px;font-size:14px;transition:background 0.15s;';
+      var subtitle = [];
+      if (city.admin1) subtitle.push(city.admin1);
+      if (city.country) subtitle.push(city.country);
+      div.innerHTML = '<strong>' + (city.name || '') + '</strong> <span style="color:var(--muted-fg);font-size:12px;">' + subtitle.join(', ') + '</span>';
+      div.onmouseover = function() { div.style.background = 'var(--muted)'; };
+      div.onmouseout = function() { div.style.background = 'transparent'; };
+      div.onclick = function() {
+        var fullName = city.name + (city.admin1 ? ', ' + city.admin1 : '') + (city.country ? ', ' + city.country : '');
+        App.Weather._selectLocation(city.latitude, city.longitude, fullName);
+      };
+      results.appendChild(div);
+    });
   },
 
   _selectLocation: function(lat, lon, name) {
@@ -4715,12 +4985,21 @@ App.Weather = {
   _bindContextMenu: function() {
     var self = this;
     var clock = document.getElementById('clock');
-    if (!clock || clock._ctxBound) return;
-    clock._ctxBound = true;
-    clock.addEventListener('contextmenu', function(e) {
-      e.preventDefault();
-      self._openLocationConfig();
-    });
+    if (clock && !clock._ctxBound) {
+      clock._ctxBound = true;
+      clock.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        self._openLocationConfig();
+      });
+    }
+    var city = document.getElementById('clockCity');
+    if (city && !city._clickBound) {
+      city._clickBound = true;
+      city.addEventListener('click', function(e) {
+        e.stopPropagation();
+        self._openLocationConfig();
+      });
+    }
   }
 };
 

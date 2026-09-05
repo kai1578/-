@@ -474,6 +474,19 @@ header h1 {
   border: 2px solid var(--card);
   z-index: 7;
 }
+.clock-city {
+  position: absolute;
+  bottom: 16%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted-fg);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 8;
+  letter-spacing: 0.5px;
+}
 .time-bar .date { font-size: 14px; color: var(--muted-fg); margin-top: 12px; }
 .time-bar .greeting { font-size: 16px; font-weight: 500; color: var(--fg); margin-top: 4px; opacity: 0.85; }
 
@@ -1728,6 +1741,7 @@ footer {
       <canvas class="clock-weather" id="weatherCanvas"></canvas>
       <div class="clock-ticks" id="clockTicks"></div>
       <div class="clock-numbers" id="clockNumbers"></div>
+      <div class="clock-city" id="clockCity"></div>
       <div class="clock-hand hour-hand" id="hourHand"></div>
       <div class="clock-hand minute-hand" id="minuteHand"></div>
       <div class="clock-hand second-hand" id="secondHand"></div>
@@ -2029,6 +2043,23 @@ footer {
     <h2>🧮 计算器</h2>
     <input type="text" id="calcDisplay" readonly style="width:100%;height:56px;font-size:28px;text-align:right;padding:0 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--muted);color:var(--fg);font-family:inherit;margin-bottom:16px;outline:none;">
     <div id="calcGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
+  </div>
+</div>
+
+<!-- 天气位置配置弹窗 -->
+<div class="modal-overlay" id="weatherLocOverlay">
+  <div class="modal" style="max-width:420px;padding:24px;">
+    <h2 style="font-size:20px;margin-bottom:16px;">📍 天气位置配置</h2>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label style="font-size:13px;font-weight:600;color:var(--fg);">搜索城市</label>
+      <input type="text" id="weatherLocInput" placeholder="输入城市名，如：北京" style="width:100%;height:40px;padding:0 12px;border:1.5px solid var(--border);border-radius:10px;background:var(--muted);color:var(--fg);font-family:inherit;font-size:14px;outline:none;margin-top:6px;">
+    </div>
+    <div id="weatherLocResults" style="max-height:180px;overflow-y:auto;margin-bottom:12px;display:none;"></div>
+    <div id="weatherLocCurrent" style="font-size:13px;color:var(--muted-fg);margin-bottom:16px;padding:10px;background:var(--muted);border-radius:8px;"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="sys-btn sys-btn-secondary" onclick="App.Weather._resetLocation()">恢复自动定位</button>
+      <button class="sys-btn sys-btn-primary" onclick="document.getElementById('weatherLocOverlay').classList.remove('active')">关闭</button>
+    </div>
   </div>
 </div>
 
@@ -4309,10 +4340,14 @@ App.Weather = {
           this._data = c.data;
           this._initParticles();
           this._startLoop();
+          this._bindContextMenu();
+          this._updateCityDisplay();
+          if (!localStorage.getItem('kai_weather_location')) this.load();
           return;
         }
       } catch (e) {}
     }
+    this._bindContextMenu();
     this.load();
   },
 
@@ -4327,10 +4362,22 @@ App.Weather = {
 
   load: function() {
     var self = this;
+    var saved = localStorage.getItem('kai_weather_location');
+    if (saved) {
+      try {
+        var loc = JSON.parse(saved);
+        if (loc.lat && loc.lon) {
+          this._fetchWeather(loc.lat, loc.lon);
+          return;
+        }
+      } catch (e) {}
+    }
     fetch('https://ipapi.co/json/')
       .then(function(r) { return r.json(); })
       .then(function(loc) {
         if (loc && loc.latitude && loc.longitude) {
+          self._ipCityName = loc.city || loc.region || '';
+          self._updateCityDisplay();
           self._fetchWeather(loc.latitude, loc.longitude);
         } else { self._useDefault(); }
       })
@@ -4356,9 +4403,27 @@ App.Weather = {
           localStorage.setItem(self._cacheKey, JSON.stringify({ time: Date.now(), data: self._data }));
           self._initParticles();
           self._startLoop();
+          self._updateCityDisplay();
         } else { self._useDefault(); }
       })
       .catch(function() { self._useDefault(); });
+  },
+
+  _updateCityDisplay: function() {
+    var el = document.getElementById('clockCity');
+    if (!el) return;
+    var saved = localStorage.getItem('kai_weather_location');
+    var name = '';
+    if (saved) {
+      try {
+        var loc = JSON.parse(saved);
+        if (loc.name) name = loc.name.split(',')[0].trim();
+      } catch (e) {}
+    } else if (this._ipCityName) {
+      name = this._ipCityName;
+    }
+    el.textContent = name;
+    el.style.display = name ? 'block' : 'none';
   },
 
   _initParticles: function() {
@@ -4551,6 +4616,111 @@ App.Weather = {
     this._initParticles();
     this._snowflakes = null;
     this._startLoop();
+  },
+
+  _openLocationConfig: function() {
+    var overlay = document.getElementById('weatherLocOverlay');
+    var input = document.getElementById('weatherLocInput');
+    var results = document.getElementById('weatherLocResults');
+    var current = document.getElementById('weatherLocCurrent');
+    if (!overlay) return;
+
+    // 显示当前配置
+    var saved = localStorage.getItem('kai_weather_location');
+    if (saved) {
+      try {
+        var loc = JSON.parse(saved);
+        current.textContent = '当前位置: ' + (loc.name || '已配置') + ' (' + loc.lat.toFixed(2) + ', ' + loc.lon.toFixed(2) + ')';
+      } catch (e) { current.textContent = '当前位置: 自动定位'; }
+    } else {
+      current.textContent = '当前位置: 自动定位（基于 IP）';
+    }
+
+    results.style.display = 'none';
+    results.innerHTML = '';
+    input.value = '';
+    overlay.classList.add('active');
+
+    // 绑定搜索
+    var self = this;
+    if (!input._bound) {
+      input._bound = true;
+      var debounce = null;
+      input.addEventListener('input', function() {
+        clearTimeout(debounce);
+        var q = input.value.trim();
+        if (q.length < 2) { results.style.display = 'none'; return; }
+        debounce = setTimeout(function() { self._searchCity(q); }, 400);
+      });
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          var q = input.value.trim();
+          if (q.length >= 2) self._searchCity(q);
+        }
+      });
+    }
+    setTimeout(function() { input.focus(); }, 100);
+  },
+
+  _searchCity: function(query) {
+    var self = this;
+    var results = document.getElementById('weatherLocResults');
+    results.style.display = 'block';
+    results.innerHTML = '<div style="padding:8px;color:var(--muted-fg);font-size:13px;">搜索中...</div>';
+
+    fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(query) + '&count=8&language=zh&format=json')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d.results || d.results.length === 0) {
+          results.innerHTML = '<div style="padding:8px;color:var(--muted-fg);font-size:13px;">未找到相关城市</div>';
+          return;
+        }
+        results.innerHTML = '';
+        d.results.forEach(function(city) {
+          var div = document.createElement('div');
+          div.style.cssText = 'padding:10px 12px;cursor:pointer;border-radius:8px;font-size:14px;transition:background 0.15s;';
+          div.innerHTML = '<strong>' + (city.name || '') + '</strong> <span style="color:var(--muted-fg);font-size:12px;">' + (city.country || '') + (city.admin1 ? ', ' + city.admin1 : '') + '</span>';
+          div.onmouseover = function() { div.style.background = 'var(--muted)'; };
+          div.onmouseout = function() { div.style.background = 'transparent'; };
+          div.onclick = function() {
+            self._selectLocation(city.latitude, city.longitude, city.name + (city.admin1 ? ', ' + city.admin1 : '') + (city.country ? ', ' + city.country : ''));
+          };
+          results.appendChild(div);
+        });
+      })
+      .catch(function() {
+        results.innerHTML = '<div style="padding:8px;color:var(--danger,#ef4444);font-size:13px;">搜索失败，请重试</div>';
+      });
+  },
+
+  _selectLocation: function(lat, lon, name) {
+    localStorage.setItem('kai_weather_location', JSON.stringify({ lat: lat, lon: lon, name: name }));
+    localStorage.removeItem('kai_weather_cache');
+    document.getElementById('weatherLocOverlay').classList.remove('active');
+    App.UI.toast('已切换到: ' + name);
+    this._updateCityDisplay();
+    this.load();
+  },
+
+  _resetLocation: function() {
+    localStorage.removeItem('kai_weather_location');
+    localStorage.removeItem('kai_weather_cache');
+    document.getElementById('weatherLocOverlay').classList.remove('active');
+    App.UI.toast('已恢复自动定位');
+    this._updateCityDisplay();
+    this.load();
+  },
+
+  _bindContextMenu: function() {
+    var self = this;
+    var clock = document.getElementById('clock');
+    if (!clock || clock._ctxBound) return;
+    clock._ctxBound = true;
+    clock.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      self._openLocationConfig();
+    });
   }
 };
 

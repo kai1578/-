@@ -392,6 +392,13 @@
       "desc": "",
       "category": "视频网站",
       "favicon": ""
+    },
+    {
+      "name": "note.109406.xyz",
+      "url": "https://note.109406.xyz/check-auth?to=%2F",
+      "desc": "",
+      "category": "开发资源",
+      "favicon": ""
     }
   ]
 }

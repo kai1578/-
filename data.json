@@ -394,11 +394,11 @@
       "favicon": ""
     },
     {
-      "name": "note.109406.xyz",
+      "name": "VPN",
       "url": "https://note.109406.xyz/check-auth?to=%2F",
       "desc": "",
       "category": "开发资源",
-      "favicon": ""
+      "favicon": "icons/note_109406_xyz.png"
     }
   ]
 }

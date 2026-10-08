@@ -408,11 +408,11 @@
       "favicon": ""
     },
     {
-      "name": "www.moyu.cn",
+      "name": "魔芋AI",
       "url": "https://www.moyu.cn/console/personal",
       "desc": "xu1767891667/xu509309863886",
       "category": "AI",
-      "favicon": ""
+      "favicon": "icons/moyu_cn.png"
     }
   ]
 }

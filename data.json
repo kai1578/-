@@ -416,11 +416,11 @@
       "favicon": "icons/moyu_cn.png"
     },
     {
-      "name": "www.google.com.hk",
+      "name": "谷歌",
       "url": "https://www.google.com.hk/index.html",
       "desc": "xu509309863886",
-      "category": "AI",
-      "favicon": ""
+      "category": "搜索网站",
+      "favicon": "icons/google_com_hk.png"
     }
   ]
 }

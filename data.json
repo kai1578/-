@@ -414,6 +414,13 @@
       "desc": "xu1767891667/xu509309863886",
       "category": "AI",
       "favicon": "icons/moyu_cn.png"
+    },
+    {
+      "name": "www.google.com.hk",
+      "url": "https://www.google.com.hk/index.html",
+      "desc": "xu509309863886",
+      "category": "AI",
+      "favicon": ""
     }
   ]
 }

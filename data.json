@@ -431,11 +431,11 @@
       "favicon": ""
     },
     {
-      "name": "console.cucloud.cn",
+      "name": "云服务器",
       "url": "https://console.cucloud.cn/console/ecs/instance?regionId=8031797054021464064",
-      "desc": "",
+      "desc": "&Qn54dgarg",
       "category": "NAS",
-      "favicon": ""
+      "favicon": "icons/console_cucloud_cn.png"
     }
   ]
 }

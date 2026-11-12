@@ -429,6 +429,13 @@
       "desc": "",
       "category": "NAS",
       "favicon": ""
+    },
+    {
+      "name": "console.cucloud.cn",
+      "url": "https://console.cucloud.cn/console/ecs/instance?regionId=8031797054021464064",
+      "desc": "",
+      "category": "NAS",
+      "favicon": ""
     }
   ]
 }

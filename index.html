@@ -108,12 +108,32 @@ body {
 .bg-image {
   position: absolute;
   inset: 0;
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
+  z-index: 0;
   opacity: 0;
   transition: opacity 1.2s ease-in-out;
   will-change: opacity;
+}
+
+.bg-image::before,
+.bg-image::after {
+  content: '';
+  position: absolute;
+  background-image: var(--bg-url);
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* 底层：同一张图放大铺满并模糊，填充比例不一致产生的留白 */
+.bg-image::before {
+  inset: -8%;
+  background-size: cover;
+  filter: blur(40px) saturate(1.1) brightness(0.92);
+}
+
+/* 顶层：原图按比例完整居中显示，不裁切 */
+.bg-image::after {
+  inset: 0;
+  background-size: contain;
 }
 
 .bg-image.active { opacity: 1; }
@@ -3198,7 +3218,7 @@ App.BackgroundManager = {
     s.images.forEach(function(img, i) {
       var div = document.createElement('div');
       div.className = 'bg-image' + (i === s.activeIndex ? ' active' : '');
-      div.style.backgroundImage = 'url("' + img.url + '")';
+      div.style.setProperty('--bg-url', 'url("' + img.url + '")');
       div.dataset.idx = i;
       layer.appendChild(div);
     });

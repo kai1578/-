@@ -451,6 +451,48 @@
       "desc": "公网入口",
       "category": "NAS",
       "favicon": ""
+    },
+    {
+      "name": "alist",
+      "url": "https://106.74.25.66:5244/",
+      "desc": "公网·文件列表",
+      "category": "NAS",
+      "favicon": ""
+    },
+    {
+      "name": "qBittorrent",
+      "url": "https://106.74.25.66:8085/",
+      "desc": "公网·下载",
+      "category": "NAS",
+      "favicon": ""
+    },
+    {
+      "name": "LunaTV",
+      "url": "https://106.74.25.66:3000/",
+      "desc": "公网·影视",
+      "category": "NAS",
+      "favicon": ""
+    },
+    {
+      "name": "woc-panel",
+      "url": "https://106.74.25.66:36080/",
+      "desc": "公网·管理面板",
+      "category": "NAS",
+      "favicon": ""
+    },
+    {
+      "name": "decoder",
+      "url": "https://106.74.25.66:3035/",
+      "desc": "公网·解码",
+      "category": "NAS",
+      "favicon": ""
+    },
+    {
+      "name": "trim-media",
+      "url": "https://106.74.25.66:8005/",
+      "desc": "公网·媒体剪辑",
+      "category": "NAS",
+      "favicon": ""
     }
   ]
 }

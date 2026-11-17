@@ -84,7 +84,8 @@
   --grad-card: linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(30,41,59,0.7) 100%);
 }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; background: #eef2f7; }
+[data-theme="dark"] html { background: #0f172a; }
 
 body {
   font-family: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei UI", sans-serif;
@@ -121,8 +122,8 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   z-index: -1;
   transition: opacity 1.5s ease;
 }
@@ -4720,8 +4721,14 @@ App.Weather = {
 
   _resizeBgCanvas: function() {
     if (!this._bgCanvas) return;
-    this._bgCanvas.width = window.innerWidth * this._bgDpr;
-    this._bgCanvas.height = window.innerHeight * this._bgDpr;
+    var vw = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0);
+    var vh = Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
+    var nw = Math.round(vw * this._bgDpr);
+    var nh = Math.round(vh * this._bgDpr);
+    if (this._bgCanvas.width !== nw || this._bgCanvas.height !== nh) {
+      this._bgCanvas.width = nw;
+      this._bgCanvas.height = nh;
+    }
   },
 
   _calcSunMoonPosition: function(w, h) {
@@ -4840,6 +4847,8 @@ App.Weather = {
 
   _renderBackground: function() {
     if (!this._bgCtx) return;
+    // 每帧校验画布尺寸与当前视口一致，避免 resize 事件遗漏导致背景只覆盖局部、右侧露白
+    this._resizeBgCanvas();
     var ctx = this._bgCtx;
     var w = this._bgCanvas.width / this._bgDpr;
     var h = this._bgCanvas.height / this._bgDpr;

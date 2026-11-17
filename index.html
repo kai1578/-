@@ -2180,7 +2180,7 @@ footer {
 </div>
 
 <script>
-var VER = '2.2.1';
+var VER = '2.2.2';
 
 /* ===== App 命名空间 ===== */
 var App = {};
@@ -4843,6 +4843,9 @@ App.Weather = {
     // 每帧校验画布尺寸与当前视口一致，避免 resize 事件遗漏导致背景只覆盖局部、右侧露白
     this._resizeBgCanvas();
     var ctx = this._bgCtx;
+    // 关键：canvas 内部缓冲区是物理像素(视口尺寸×dpr)，绘制坐标用 CSS 像素，
+    // 必须按 dpr 缩放坐标系，否则高分屏/缩放屏上只画出 1/dpr 宽度导致右侧露白
+    ctx.setTransform(this._bgDpr, 0, 0, this._bgDpr, 0, 0);
     var w = this._bgCanvas.width / this._bgDpr;
     var h = this._bgCanvas.height / this._bgDpr;
     var pos = this._calcSunMoonPosition(w, h);
